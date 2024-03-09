@@ -10,7 +10,7 @@
 // TODO: Part 2A 
 // TODO: Part 4A 
 // With what we want & what we don't defined we can include the API
-#include "../Gateware/Gateware.h"
+#include "../gateware-main/Gateware.h"
 
 #include "FileIntoString.h"
 #include "renderer.h" // example rendering code (not Gateware code!)
