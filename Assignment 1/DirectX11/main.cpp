@@ -28,7 +28,8 @@ int main()
 	if (+win.Create(0, 0, 800, 600, GWindowStyle::WINDOWEDBORDERED))
 	{
 		//TODO: part 1A 
-		float clr[] = { 57/255.0f, 1.0f, 20/255.0f, 1 }; // TODO: Part 1A (optional) 
+		win.SetWindowName("Jazmine Chargualaf - Assignment 1 - DirectX 11");
+		float clr[] = { 1.0f, 192/255.0f, 203/255.0f, 1 }; // TODO: Part 1A (optional) 
 		msgs.Create([&](const GW::GEvent& e) {
 			GW::SYSTEM::GWindow::Events q;
 			if (+e.Read(q) && q == GWindow::Events::RESIZE)
