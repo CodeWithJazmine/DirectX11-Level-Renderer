@@ -71,7 +71,11 @@ private:
 		float verts[] = {
 			0,   0.5f,
 			0.5f, -0.5f,
+			0.5f, -0.5f,
+			-0.5f, -0.5f,
+			0,   0.5f,
 			-0.5f, -0.5f
+
 		};
 		CreateVertexBuffer(creator, &verts[0], sizeof(verts));
 	}
@@ -174,7 +178,7 @@ public:
 		// TODO: Part 1B 
 		// TODO: Part 1D 
 		// TODO: Part 3D 
-		curHandles.context->Draw(3, 0); 
+		curHandles.context->Draw(6, 0); 
 
 		ReleasePipelineHandles(curHandles);
 	}
@@ -210,7 +214,7 @@ private:
 		SetShaders(handles);
 		//TODO: Part 2E 
 		handles.context->IASetInputLayout(vertexFormat.Get());
-		handles.context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST); //TODO: Part 1B 
+		handles.context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST); //TODO: Part 1B 
 	}
 
 	void SetRenderTargets(PipelineHandles handles)
