@@ -53,6 +53,7 @@ public:
 		gMatrix.Create();
 		// TODO: Part 2C 
 		InitializeWorldMatrix();
+		shaderVars.worldMatrix = matrix;
 		// TODO: Part 2G 
 		// TODO: Part 3A 
 		// TODO: Part 3B 
