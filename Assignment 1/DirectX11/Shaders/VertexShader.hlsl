@@ -9,3 +9,8 @@ float4 main(float4 inputVertex : POSITION) : SV_POSITION
 {
     return inputVertex;
 }
+
+cbuffer SHADER_VARS
+{
+    float4x4 world;
+};

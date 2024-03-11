@@ -16,6 +16,10 @@ struct VERTEX
 	float x, y, z, w;
 };
 // TODO: Part 2B 
+struct SHADER_VARS
+{
+	GW::MATH::GMATRIXF worldMatrix;
+};
 // TODO: Part 2G 
 
 class Renderer
@@ -30,6 +34,8 @@ class Renderer
 	Microsoft::WRL::ComPtr<ID3D11InputLayout>	vertexFormat;
 
 	// TODO: Part 2A 
+	GW::MATH::GMATRIXF matrix;
+	GW::MATH::GMatrix gMatrix;
 	// TODO: Part 2C 
 	// TODO: Part 2D 
 	// TODO: Part 2G 
@@ -43,6 +49,7 @@ public:
 		win = _win;
 		d3d = _d3d;
 		// TODO: Part 2A 
+		gMatrix.Create();
 		// TODO: Part 2C 
 		// TODO: Part 2G 
 		// TODO: Part 3A 
@@ -74,16 +81,16 @@ private:
 		// TODO: Part 1D
 
 		std::vector<VERTEX> verts;
-		BuildGrid(verts, 25);
+		BuildGrid(verts);
 		CreateVertexBuffer(creator, verts.data(), sizeof(VERTEX) * verts.size());
 	}
 
-	void BuildGrid(std::vector<VERTEX>& verts, int density)
+	void BuildGrid(std::vector<VERTEX>& verts)
 	{
-		float spacing = 1.0f / density; // Determine spacing between grid lines
+		float spacing = 1.0f / 25; // Determine spacing between grid lines
 
 		// Build horizontal lines
-		for (int i = 0; i <= density; ++i)
+		for (int i = 0; i <= 25; ++i)
 		{
 			float y = -0.5f + spacing * i;
 			verts.push_back({ -0.5f, y, 0.0f, 1.0f }); // Left point
@@ -91,14 +98,31 @@ private:
 		}
 
 		// Build vertical lines
-		for (int i = 0; i <= density; ++i)
+		for (int i = 0; i <= 25; ++i)
 		{
 			float x = -0.5f + spacing * i;
 			verts.push_back({ x, -0.5f, 0.0f, 1.0f }); // Bottom point
 			verts.push_back({ x, 0.5f, 0.0f, 1.0f });  // Top point
 		}
 	}
-	
+
+	void InitializeWorldMatrix()
+	{
+		// Rotate matrix 90 degrees about the x axis
+		GW::MATH::GMATRIXF rotationMatrix;
+		gMatrix.RotateXLocalF(matrix, G_DEGREE_TO_RADIAN_F(90.0f), rotationMatrix);
+
+		// Translate matrix down the y axis by 0.5f units
+		GW::MATH::GMATRIXF translationMatrix;
+		GW::MATH::GVECTORF translationVector = { 0.0f, -0.5f };
+		gMatrix.TranslateLocalF(matrix, translationVector, translationMatrix);
+
+		GW::MATH::GMATRIXF newMatrix;
+		gMatrix.MultiplyMatrixF(rotationMatrix, translationMatrix, newMatrix);
+
+		matrix = newMatrix;
+	}
+
 	void CreateVertexBuffer(ID3D11Device* creator, const void* data, unsigned int sizeInBytes)
 	{
 		D3D11_SUBRESOURCE_DATA bData = { data, 0, 0 };
