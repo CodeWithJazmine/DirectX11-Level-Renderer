@@ -71,18 +71,34 @@ private:
 	{
 		// TODO: Part 1B 
 		// TODO: Part 1C 
-		// TODO: Part 1D 
-		std::vector<VERTEX> verts = { 
-		{ 0.f, 0.5f, 0.f, 1.f },
-		{ 0.5f, -0.5f, 0.f, 1.f },
-		{ 0.5f, -0.5f, 0.f, 1.f },
-		{ -0.5f, -0.5f, 0.f, 1.f },
-		{ 0.f,   0.5f, 0.f, 1.f },
-		{ -0.5f, -0.5f, 0.f, 1.f } 
-		};
+		// TODO: Part 1D
+
+		std::vector<VERTEX> verts;
+		BuildGrid(verts, 25);
 		CreateVertexBuffer(creator, verts.data(), sizeof(VERTEX) * verts.size());
 	}
 
+	void BuildGrid(std::vector<VERTEX>& verts, int density)
+	{
+		float spacing = 1.0f / density; // Determine spacing between grid lines
+
+		// Build horizontal lines
+		for (int i = 0; i <= density; ++i)
+		{
+			float y = -0.5f + spacing * i;
+			verts.push_back({ -0.5f, y, 0.0f, 1.0f }); // Left point
+			verts.push_back({ 0.5f, y, 0.0f, 1.0f });  // Right point
+		}
+
+		// Build vertical lines
+		for (int i = 0; i <= density; ++i)
+		{
+			float x = -0.5f + spacing * i;
+			verts.push_back({ x, -0.5f, 0.0f, 1.0f }); // Bottom point
+			verts.push_back({ x, 0.5f, 0.0f, 1.0f });  // Top point
+		}
+	}
+	
 	void CreateVertexBuffer(ID3D11Device* creator, const void* data, unsigned int sizeInBytes)
 	{
 		D3D11_SUBRESOURCE_DATA bData = { data, 0, 0 };
@@ -181,7 +197,7 @@ public:
 		// TODO: Part 1B 
 		// TODO: Part 1D 
 		// TODO: Part 3D 
-		curHandles.context->Draw(6, 0); 
+		curHandles.context->Draw(104, 0);
 
 		ReleasePipelineHandles(curHandles);
 	}
