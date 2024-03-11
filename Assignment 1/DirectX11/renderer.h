@@ -11,6 +11,10 @@ void PrintLabeledDebugString(const char* label, const char* toPrint)
 }
 
 // TODO: Part 1C 
+struct VERTEX
+{
+	float x, y, z, w;
+};
 // TODO: Part 2B 
 // TODO: Part 2G 
 
@@ -68,16 +72,15 @@ private:
 		// TODO: Part 1B 
 		// TODO: Part 1C 
 		// TODO: Part 1D 
-		float verts[] = {
-			0,   0.5f,
-			0.5f, -0.5f,
-			0.5f, -0.5f,
-			-0.5f, -0.5f,
-			0,   0.5f,
-			-0.5f, -0.5f
-
+		std::vector<VERTEX> verts = { 
+		{ 0.f, 0.5f, 0.f, 1.f },
+		{ 0.5f, -0.5f, 0.f, 1.f },
+		{ 0.5f, -0.5f, 0.f, 1.f },
+		{ -0.5f, -0.5f, 0.f, 1.f },
+		{ 0.f,   0.5f, 0.f, 1.f },
+		{ -0.5f, -0.5f, 0.f, 1.f } 
 		};
-		CreateVertexBuffer(creator, &verts[0], sizeof(verts));
+		CreateVertexBuffer(creator, verts.data(), sizeof(VERTEX) * verts.size());
 	}
 
 	void CreateVertexBuffer(ID3D11Device* creator, const void* data, unsigned int sizeInBytes)
@@ -158,7 +161,7 @@ private:
 
 		attributes[0].SemanticName = "POSITION";
 		attributes[0].SemanticIndex = 0;
-		attributes[0].Format = DXGI_FORMAT_R32G32_FLOAT;
+		attributes[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
 		attributes[0].InputSlot = 0;
 		attributes[0].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
 		attributes[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
@@ -226,7 +229,7 @@ private:
 	void SetVertexBuffers(PipelineHandles handles)
 	{
 		// TODO: Part 1C 
-		const UINT strides[] = { sizeof(float) * 2 };
+		const UINT strides[] = { sizeof(VERTEX) };
 		const UINT offsets[] = { 0 };
 		ID3D11Buffer* const buffs[] = { vertexBuffer.Get() };
 		handles.context->IASetVertexBuffers(0, ARRAYSIZE(buffs), buffs, strides, offsets);

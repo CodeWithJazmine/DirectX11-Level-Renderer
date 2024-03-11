@@ -5,8 +5,7 @@
 // TODO: Part 2G 
 // TODO: Part 3B 
 
-float4 main(float2 inputVertex : POSITION) : SV_POSITION
+float4 main(float4 inputVertex : POSITION) : SV_POSITION
 {
-    //return inputVertex;
-	return float4(inputVertex, 0, 1);
+    return inputVertex;
 }
