@@ -37,6 +37,7 @@ class Renderer
 	GW::MATH::GMATRIXF matrix;
 	GW::MATH::GMatrix gMatrix;
 	// TODO: Part 2C 
+	SHADER_VARS shaderVars;
 	// TODO: Part 2D 
 	// TODO: Part 2G 
 	// TODO: Part 3A 
@@ -51,6 +52,7 @@ public:
 		// TODO: Part 2A 
 		gMatrix.Create();
 		// TODO: Part 2C 
+		InitializeWorldMatrix();
 		// TODO: Part 2G 
 		// TODO: Part 3A 
 		// TODO: Part 3B 
