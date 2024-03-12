@@ -9,12 +9,14 @@
 cbuffer SHADER_VARS
 {
     float4x4 world;
+    float4x4 view;
 };
 
 float4 main(float4 inputVertex : POSITION) : SV_POSITION
 {
     
-    float4 transformedVertex = mul(inputVertex, world);
+    float4 transformedVertex = mul(inputVertex, world); // apply world matrix
+    transformedVertex = mul(transformedVertex, view); // apply view matrix
     return transformedVertex;
 }
 

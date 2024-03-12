@@ -18,9 +18,10 @@ struct VERTEX
 // TODO: Part 2B 
 struct SHADER_VARS
 {
-	GW::MATH::GMATRIXF matrix;
-};
+	GW::MATH::GMATRIXF worldMatrix;
 // TODO: Part 2G 
+	GW::MATH::GMATRIXF viewMatrix;
+};
 
 class Renderer
 {
@@ -41,6 +42,7 @@ class Renderer
 	// TODO: Part 2D 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBuffer;
 	// TODO: Part 2G 
+	GW::MATH::GMATRIXF viewMatrix;
 	// TODO: Part 3A 
 	// TODO: Part 3C 
 	// TODO: Part 4A 
@@ -54,8 +56,10 @@ public:
 		matrixProxy.Create();
 		// TODO: Part 2C 
 		InitializeWorldMatrix();
-		shaderVars.matrix = worldMatrix;
+		shaderVars.worldMatrix = worldMatrix;
 		// TODO: Part 2G 
+		InitializeViewMatrix();
+		shaderVars.viewMatrix = viewMatrix;
 		// TODO: Part 3A 
 		// TODO: Part 3B 
 		// TODO: Part 3C 
@@ -120,8 +124,15 @@ private:
 		// Translate matrix down the y axis by 0.5f units
 		GW::MATH::GVECTORF translationVector = { 0.0f, -0.5f };
 		matrixProxy.TranslateGlobalF(worldMatrix, translationVector, worldMatrix);
+	}
 
+	void InitializeViewMatrix()
+	{
+		GW::MATH::GVECTORF eyePos = { 0.25f, -0.125f, -0.25f };
+		GW::MATH::GVECTORF lookAtPos = { 0.0f, 0.0f, 0.0f };
+		GW::MATH::GVECTORF upPos = { 0.0f, 1.0f, 0.0f };
 
+		matrixProxy.LookAtLHF(eyePos, lookAtPos, upPos, viewMatrix);
 	}
 
 	void CreateVertexBuffer(ID3D11Device* creator, const void* data, unsigned int sizeInBytes)
