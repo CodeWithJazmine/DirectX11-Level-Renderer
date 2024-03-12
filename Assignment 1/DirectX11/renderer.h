@@ -269,6 +269,7 @@ private:
 		SetVertexBuffers(handles);
 		SetShaders(handles);
 		//TODO: Part 2E 
+		handles.context->VSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf() );
 		handles.context->IASetInputLayout(vertexFormat.Get());
 		handles.context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST); //TODO: Part 1B 
 	}
