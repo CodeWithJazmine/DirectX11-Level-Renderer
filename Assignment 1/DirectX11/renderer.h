@@ -34,11 +34,12 @@ class Renderer
 	Microsoft::WRL::ComPtr<ID3D11InputLayout>	vertexFormat;
 
 	// TODO: Part 2A 
-	GW::MATH::GMATRIXF matrix;
-	GW::MATH::GMatrix gMatrix;
+	GW::MATH::GMATRIXF worldMatrix;
+	GW::MATH::GMatrix matrixProxy;
 	// TODO: Part 2C 
 	SHADER_VARS shaderVars;
 	// TODO: Part 2D 
+	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBuffer;
 	// TODO: Part 2G 
 	// TODO: Part 3A 
 	// TODO: Part 3C 
@@ -50,10 +51,10 @@ public:
 		win = _win;
 		d3d = _d3d;
 		// TODO: Part 2A 
-		gMatrix.Create();
+		matrixProxy.Create();
 		// TODO: Part 2C 
 		InitializeWorldMatrix();
-		shaderVars.worldMatrix = matrix;
+		shaderVars.worldMatrix = worldMatrix;
 		// TODO: Part 2G 
 		// TODO: Part 3A 
 		// TODO: Part 3B 
@@ -71,6 +72,7 @@ private:
 		
 		InitializeVertexBuffer(creator);
 		//TODO: Part 2D 
+		InitializeConstantBuffer(creator, &shaderVars);
 		InitializePipeline(creator);
 
 		// free temporary handle
@@ -113,17 +115,17 @@ private:
 	{
 		// Rotate matrix 90 degrees about the x axis
 		GW::MATH::GMATRIXF rotationMatrix;
-		gMatrix.RotateXLocalF(matrix, G_DEGREE_TO_RADIAN_F(90.0f), rotationMatrix);
+		matrixProxy.RotateXLocalF(worldMatrix, G_DEGREE_TO_RADIAN_F(90.0f), rotationMatrix);
 
 		// Translate matrix down the y axis by 0.5f units
 		GW::MATH::GMATRIXF translationMatrix;
 		GW::MATH::GVECTORF translationVector = { 0.0f, -0.5f };
-		gMatrix.TranslateLocalF(matrix, translationVector, translationMatrix);
+		matrixProxy.TranslateLocalF(worldMatrix, translationVector, translationMatrix);
 
 		GW::MATH::GMATRIXF newMatrix;
-		gMatrix.MultiplyMatrixF(rotationMatrix, translationMatrix, newMatrix);
+		matrixProxy.MultiplyMatrixF(rotationMatrix, translationMatrix, newMatrix);
 
-		matrix = newMatrix;
+		worldMatrix = newMatrix;
 	}
 
 	void CreateVertexBuffer(ID3D11Device* creator, const void* data, unsigned int sizeInBytes)
@@ -133,6 +135,14 @@ private:
 		creator->CreateBuffer(&bDesc, &bData, vertexBuffer.GetAddressOf());
 	}
 
+	void InitializeConstantBuffer(ID3D11Device* creator, const void* data)
+	{
+		D3D11_SUBRESOURCE_DATA cbData = { data, 0, 0 };
+		CD3D11_BUFFER_DESC cbDesc(sizeof(SHADER_VARS), D3D11_BIND_CONSTANT_BUFFER);
+		creator->CreateBuffer(&cbDesc, &cbData, constantBuffer.GetAddressOf());
+	}
+
+	
 	void InitializePipeline(ID3D11Device* creator)
 	{
 		UINT compilerFlags = D3DCOMPILE_ENABLE_STRICTNESS;
