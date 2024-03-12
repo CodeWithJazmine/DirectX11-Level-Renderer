@@ -21,6 +21,7 @@ struct SHADER_VARS
 	GW::MATH::GMATRIXF worldMatrix;
 // TODO: Part 2G 
 	GW::MATH::GMATRIXF viewMatrix;
+	GW::MATH::GMATRIXF projectionMatrix;
 };
 
 class Renderer
@@ -44,6 +45,7 @@ class Renderer
 	// TODO: Part 2G 
 	GW::MATH::GMATRIXF viewMatrix;
 	// TODO: Part 3A 
+	GW::MATH::GMATRIXF projectionMatrix;
 	// TODO: Part 3C 
 	// TODO: Part 4A 
 
@@ -61,7 +63,9 @@ public:
 		InitializeViewMatrix();
 		shaderVars.viewMatrix = viewMatrix;
 		// TODO: Part 3A 
+		InitializeProjectionMatrix();
 		// TODO: Part 3B 
+		shaderVars.projectionMatrix = projectionMatrix;
 		// TODO: Part 3C 
 		// TODO: Part 4A 
 		InitializeGraphics();
@@ -133,6 +137,17 @@ private:
 		GW::MATH::GVECTORF upPos = { 0.0f, 1.0f, 0.0f };
 
 		matrixProxy.LookAtLHF(eyePos, lookAtPos, upPos, viewMatrix);
+	}
+
+	void InitializeProjectionMatrix()
+	{
+		float fov = 65.0f;
+		float aspectRatio;
+		d3d.GetAspectRatio(aspectRatio);
+		float nearPlane = 0.1f;
+		float farPlane = 100.0f;
+
+		matrixProxy.ProjectionDirectXLHF(fov, aspectRatio, nearPlane, farPlane, projectionMatrix);
 	}
 
 	void CreateVertexBuffer(ID3D11Device* creator, const void* data, unsigned int sizeInBytes)
