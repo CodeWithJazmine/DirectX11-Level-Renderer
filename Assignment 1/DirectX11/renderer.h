@@ -18,7 +18,7 @@ struct VERTEX
 // TODO: Part 2B 
 struct SHADER_VARS
 {
-	GW::MATH::GMATRIXF worldMatrix;
+	GW::MATH::GMATRIXF matrix;
 };
 // TODO: Part 2G 
 
@@ -54,7 +54,7 @@ public:
 		matrixProxy.Create();
 		// TODO: Part 2C 
 		InitializeWorldMatrix();
-		shaderVars.worldMatrix = worldMatrix;
+		shaderVars.matrix = worldMatrix;
 		// TODO: Part 2G 
 		// TODO: Part 3A 
 		// TODO: Part 3B 
@@ -113,19 +113,15 @@ private:
 
 	void InitializeWorldMatrix()
 	{
+		matrixProxy.IdentityF(worldMatrix);
 		// Rotate matrix 90 degrees about the x axis
-		GW::MATH::GMATRIXF rotationMatrix;
-		matrixProxy.RotateXLocalF(worldMatrix, G_DEGREE_TO_RADIAN_F(90.0f), rotationMatrix);
+		matrixProxy.RotateXGlobalF(worldMatrix, G_DEGREE_TO_RADIAN_F(90.0f), worldMatrix);
 
 		// Translate matrix down the y axis by 0.5f units
-		GW::MATH::GMATRIXF translationMatrix;
 		GW::MATH::GVECTORF translationVector = { 0.0f, -0.5f };
-		matrixProxy.TranslateLocalF(worldMatrix, translationVector, translationMatrix);
+		matrixProxy.TranslateGlobalF(worldMatrix, translationVector, worldMatrix);
 
-		GW::MATH::GMATRIXF newMatrix;
-		matrixProxy.MultiplyMatrixF(rotationMatrix, translationMatrix, newMatrix);
 
-		worldMatrix = newMatrix;
 	}
 
 	void CreateVertexBuffer(ID3D11Device* creator, const void* data, unsigned int sizeInBytes)
