@@ -87,11 +87,6 @@ public:
 		
 		InitializeGraphics();
 	}
-
-	void UpdateCamera()
-	{
-		
-	}
 private:
 	//Constructor helper functions 
 	void InitializeGraphics()
@@ -188,12 +183,12 @@ private:
 		matrixProxy.TranslateGlobalF(worldMatrixCeiling, translationVector, worldMatrixCeiling);
 		
 
+		worldMatricesForCube.push_back(worldMatrix);
 		worldMatricesForCube.push_back(worldMatrixFront);
 		worldMatricesForCube.push_back(worldMatrixBack);
 		worldMatricesForCube.push_back(worldMatrixLeft);
 		worldMatricesForCube.push_back(worldMatrixRight);
 		worldMatricesForCube.push_back(worldMatrixCeiling);
-		worldMatricesForCube.push_back(worldMatrix);
 	}
 
 
@@ -339,6 +334,15 @@ public:
 	}
 
 	// TODO: Part 4B 
+	void UpdateCamera()
+	{
+		// Get delta time (the time passed since last function call)
+		static std::chrono::steady_clock::time_point timePassed = std::chrono::steady_clock::now();
+		std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
+		float deltaTime = std::chrono::duration<float>(currentTime - timePassed).count();
+		timePassed = currentTime;
+
+	}
 	// TODO: Part 4C 
 	// TODO: Part 4D 
 	// TODO: Part 4E 
