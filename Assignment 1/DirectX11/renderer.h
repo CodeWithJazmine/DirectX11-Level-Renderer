@@ -54,6 +54,9 @@ class Renderer
 	GW::MATH::GMATRIXF worldMatrixRight;
 	GW::MATH::GMATRIXF worldMatrixCeiling;
 	// TODO: Part 4A 
+	GW::INPUT::GInput inputProxy;
+	GW::INPUT::GController controllerProxy;
+
 
 public:
 	Renderer(GW::SYSTEM::GWindow _win, GW::GRAPHICS::GDirectX11Surface _d3d)
@@ -62,20 +65,32 @@ public:
 		d3d = _d3d;
 		// TODO: Part 2A 
 		matrixProxy.Create();
+		// TODO: Part 4A 
+		inputProxy.Create(_win);
+		controllerProxy.Create();
+
 		// TODO: Part 2C 
 		InitializeWorldMatrix();
 		shaderVars.worldMatrix = worldMatrix;
+
 		// TODO: Part 2G 
 		InitializeViewMatrix();
 		shaderVars.viewMatrix = viewMatrix;
+
 		// TODO: Part 3A 
 		InitializeProjectionMatrix();
 		// TODO: Part 3B 
 		shaderVars.projectionMatrix = projectionMatrix;
+
 		// TODO: Part 3C 
 		InitializeWorldMatricesForCube();
-		// TODO: Part 4A 
+		
 		InitializeGraphics();
+	}
+
+	void UpdateCamera()
+	{
+		
 	}
 private:
 	//Constructor helper functions 
