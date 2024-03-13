@@ -47,12 +47,6 @@ class Renderer
 	// TODO: Part 3A 
 	GW::MATH::GMATRIXF projectionMatrix;
 	// TODO: Part 3C 
-	std::vector<GW::MATH::GMATRIXF> worldMatricesForCube;
-	GW::MATH::GMATRIXF worldMatrixFront;
-	GW::MATH::GMATRIXF worldMatrixBack;
-	GW::MATH::GMATRIXF worldMatrixLeft;
-	GW::MATH::GMATRIXF worldMatrixRight;
-	GW::MATH::GMATRIXF worldMatrixCeiling;
 	// TODO: Part 4A 
 
 public:
@@ -73,7 +67,6 @@ public:
 		// TODO: Part 3B 
 		shaderVars.projectionMatrix = projectionMatrix;
 		// TODO: Part 3C 
-		InitializeWorldMatricesForCube();
 		// TODO: Part 4A 
 		InitializeGraphics();
 	}
@@ -137,51 +130,6 @@ private:
 		matrixProxy.TranslateGlobalF(worldMatrix, translationVector, worldMatrix);
 	}
 
-	void InitializeWorldMatricesForCube()
-	{
-
-		// Initialize matrices for each side of cube to identity
-		matrixProxy.IdentityF(worldMatrixFront);
-		matrixProxy.IdentityF(worldMatrixBack);
-		matrixProxy.IdentityF(worldMatrixLeft);
-		matrixProxy.IdentityF(worldMatrixRight);
-		matrixProxy.IdentityF(worldMatrixCeiling);
-
-		// Perform transformations for each matrix in the vector
-		GW::MATH::GVECTORF translationVector;
-		// Front wall
-		translationVector = { 0.0f, 0.0f, 0.5f };
-		matrixProxy.TranslateGlobalF(worldMatrixFront, translationVector, worldMatrixFront);
-
-		// Back wall
-		translationVector = { 0.0f, 0.0f, -0.5f };
-		matrixProxy.TranslateGlobalF(worldMatrixBack, translationVector, worldMatrixBack);
-	
-		// Left wall
-		translationVector = { -0.5f, 0.0f, 0.0f };
-		matrixProxy.RotateYGlobalF(worldMatrixLeft, G_DEGREE_TO_RADIAN_F(90.0f), worldMatrixLeft);
-		matrixProxy.TranslateGlobalF(worldMatrixLeft, translationVector, worldMatrixLeft);
-		
-		// Right wall
-		translationVector = { 0.5f, 0.0f, 0.0f };
-		matrixProxy.RotateYGlobalF(worldMatrixRight, G_DEGREE_TO_RADIAN_F(90.0f), worldMatrixRight);
-		matrixProxy.TranslateGlobalF(worldMatrixRight, translationVector, worldMatrixRight);
-			
-		 // Ceiling
-		translationVector = { 0.0f, 0.5f, 0.0f };
-		matrixProxy.RotateXGlobalF(worldMatrixCeiling, G_DEGREE_TO_RADIAN_F(90.0f), worldMatrixCeiling);
-		matrixProxy.TranslateGlobalF(worldMatrixCeiling, translationVector, worldMatrixCeiling);
-		
-
-		worldMatricesForCube.push_back(worldMatrixFront);
-		worldMatricesForCube.push_back(worldMatrixBack);
-		worldMatricesForCube.push_back(worldMatrixLeft);
-		worldMatricesForCube.push_back(worldMatrixRight);
-		worldMatricesForCube.push_back(worldMatrixCeiling);
-		worldMatricesForCube.push_back(worldMatrix);
-	}
-
-
 	void InitializeViewMatrix()
 	{
 		GW::MATH::GVECTORF eyePos = { 0.25f, -0.125f, -0.25f };
@@ -202,7 +150,6 @@ private:
 		matrixProxy.ProjectionDirectXLHF(fov, aspectRatio, nearPlane, farPlane, projectionMatrix);
 	}
 
-
 	void CreateVertexBuffer(ID3D11Device* creator, const void* data, unsigned int sizeInBytes)
 	{
 		D3D11_SUBRESOURCE_DATA bData = { data, 0, 0 };
@@ -213,7 +160,7 @@ private:
 	void InitializeConstantBuffer(ID3D11Device* creator, const void* data)
 	{
 		D3D11_SUBRESOURCE_DATA cbData = { data, 0, 0 };
-		CD3D11_BUFFER_DESC cbDesc(sizeof(SHADER_VARS), D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+		CD3D11_BUFFER_DESC cbDesc(sizeof(SHADER_VARS), D3D11_BIND_CONSTANT_BUFFER);
 		creator->CreateBuffer(&cbDesc, &cbData, constantBuffer.GetAddressOf());
 	}
 
@@ -309,16 +256,7 @@ public:
 		// TODO: Part 1B 
 		// TODO: Part 1D 
 		// TODO: Part 3D 
-		D3D11_MAPPED_SUBRESOURCE mappedResource;
-
-		for (size_t i = 0; i < worldMatricesForCube.size(); i++)
-		{
-			curHandles.context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-			shaderVars.worldMatrix = worldMatricesForCube[i];
-			memcpy(mappedResource.pData, &shaderVars, sizeof(SHADER_VARS));
-			curHandles.context->Unmap(constantBuffer.Get(), 0);
-			curHandles.context->Draw(104, 0);
-		}
+		curHandles.context->Draw(104, 0);
 
 		ReleasePipelineHandles(curHandles);
 	}
