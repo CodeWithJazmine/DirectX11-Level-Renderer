@@ -65,6 +65,8 @@ class Renderer
 
 	std::chrono::steady_clock::time_point timePassed;
 
+	GW::MATH::GMATRIXF translationMatrix;
+
 
 
 
@@ -353,7 +355,6 @@ public:
 	void UpdateCamera()
 	{
 		// Get delta time (the time passed since last function call)
-		
 		std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
 		float deltaTime = std::chrono::duration<float>(currentTime - timePassed).count();
 		timePassed = currentTime;
@@ -365,29 +366,53 @@ public:
 
 		// TODO: Part 4D 
 		float totalYChange = 0.0f;
-		const float cameraSpeed = 1.0f;
+		float totalZChange = 0.0f;
+		float totalXChange = 0.0f;
+		const float cameraSpeed = 0.3f;
 
 		// Read input
-		float spaceKeyState = 0.0f; 
-		float leftShiftState = 0.0f; 
-		float rightTriggerState = 0.0f; 
-		float leftTriggerState = 0.0f;  
+		float spaceKeyState, 
+			leftShiftState, 
+			wKeyState, 
+			sKeyState, 
+			aKeyState, 
+			dKeyState = 0.0f;
+
+		float rightTriggerState,
+			leftTriggerState,
+			leftStickYAxisState,
+			leftStickXAxisState = 0.0f;  
+		float perFrameSpeed = 0.0f;
 		
   		inputProxy.GetState(G_KEY_SPACE, spaceKeyState);
 		inputProxy.GetState(G_KEY_LEFTSHIFT, leftShiftState);
+		inputProxy.GetState(G_KEY_W, wKeyState);
+		inputProxy.GetState(G_KEY_S, sKeyState);
+		inputProxy.GetState(G_KEY_A, aKeyState);
+		inputProxy.GetState(G_KEY_D, dKeyState);
+
 		controllerProxy.GetState(0, G_RIGHT_TRIGGER_AXIS, rightTriggerState);
 		controllerProxy.GetState(0, G_LEFT_TRIGGER_AXIS, leftTriggerState);
+		controllerProxy.GetState(0, G_LY_AXIS, leftStickYAxisState);
+		controllerProxy.GetState(0, G_LX_AXIS, leftStickXAxisState);
 
  		totalYChange = spaceKeyState - leftShiftState + rightTriggerState - leftTriggerState;
-	
 		matrixProxy.TranslateLocalF(cameraMatrix, GW::MATH::GVECTORF{ 0, totalYChange * cameraSpeed * deltaTime, 0, 1 }, cameraMatrix);
 
+		// TODO: Part 4E 
+		perFrameSpeed = cameraSpeed * deltaTime;
+		totalZChange = wKeyState - sKeyState + leftStickYAxisState;
+		totalXChange = dKeyState - aKeyState + leftStickXAxisState;
+
+		matrixProxy.IdentityF(translationMatrix);
+		matrixProxy.TranslateLocalF( translationMatrix, GW::MATH::GVECTORF{ totalXChange * perFrameSpeed, 0, totalZChange * perFrameSpeed}, translationMatrix);
+		matrixProxy.MultiplyMatrixF(translationMatrix, cameraMatrix, cameraMatrix);
+		
 		matrixProxy.InverseF(cameraMatrix, viewMatrix);
 
 		shaderVars.viewMatrix = viewMatrix;
 
 	}
-		// TODO: Part 4E 
 		// TODO: Part 4F 
 		// TODO: Part 4G 
 
