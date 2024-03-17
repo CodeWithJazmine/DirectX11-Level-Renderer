@@ -38,14 +38,19 @@ class Renderer
 	// TODO: Part 2A 
 	GW::MATH::GMATRIXF worldMatrix;
 	GW::MATH::GMatrix matrixProxy;
+
 	// TODO: Part 2C 
 	SHADER_VARS shaderVars;
+
 	// TODO: Part 2D 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBuffer;
+
 	// TODO: Part 2G 
 	GW::MATH::GMATRIXF viewMatrix;
+
 	// TODO: Part 3A 
 	GW::MATH::GMATRIXF projectionMatrix;
+
 	// TODO: Part 3C 
 	std::vector<GW::MATH::GMATRIXF> worldMatricesForCube;
 	GW::MATH::GMATRIXF worldMatrixFront;
@@ -53,9 +58,14 @@ class Renderer
 	GW::MATH::GMATRIXF worldMatrixLeft;
 	GW::MATH::GMATRIXF worldMatrixRight;
 	GW::MATH::GMATRIXF worldMatrixCeiling;
+
 	// TODO: Part 4A 
 	GW::INPUT::GInput inputProxy;
 	GW::INPUT::GController controllerProxy;
+
+	std::chrono::steady_clock::time_point timePassed;
+
+
 
 
 public:
@@ -84,6 +94,8 @@ public:
 
 		// TODO: Part 3C 
 		InitializeWorldMatricesForCube();
+		
+		timePassed = std::chrono::steady_clock::now();
 		
 		InitializeGraphics();
 	}
@@ -203,7 +215,7 @@ private:
 
 	void InitializeProjectionMatrix()
 	{
-		float fov = 65.0f;
+		float fov = G2D_DEGREE_TO_RADIAN(65.0f);
 		float aspectRatio;
 		d3d.GetAspectRatio(aspectRatio);
 		float nearPlane = 0.1f;
@@ -319,13 +331,17 @@ public:
 		// TODO: Part 1B 
 		// TODO: Part 1D 
 		// TODO: Part 3D 
-		D3D11_MAPPED_SUBRESOURCE mappedResource;
+		D3D11_MAPPED_SUBRESOURCE mappedSubresource;
+
+		curHandles.context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource);
+		memcpy(mappedSubresource.pData, &shaderVars, sizeof(SHADER_VARS));
+		curHandles.context->Unmap(constantBuffer.Get(), 0);
 
 		for (size_t i = 0; i < worldMatricesForCube.size(); i++)
 		{
-			curHandles.context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+			curHandles.context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource);
 			shaderVars.worldMatrix = worldMatricesForCube[i];
-			memcpy(mappedResource.pData, &shaderVars, sizeof(SHADER_VARS));
+			memcpy(mappedSubresource.pData, &shaderVars, sizeof(SHADER_VARS));
 			curHandles.context->Unmap(constantBuffer.Get(), 0);
 			curHandles.context->Draw(104, 0);
 		}
@@ -333,21 +349,47 @@ public:
 		ReleasePipelineHandles(curHandles);
 	}
 
-	// TODO: Part 4B 
+	 //TODO: Part 4B 
 	void UpdateCamera()
 	{
 		// Get delta time (the time passed since last function call)
-		static std::chrono::steady_clock::time_point timePassed = std::chrono::steady_clock::now();
+		
 		std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
 		float deltaTime = std::chrono::duration<float>(currentTime - timePassed).count();
 		timePassed = currentTime;
 
+		// TODO: Part 4C 
+		// inverse viewMatrix to set it into world space
+		GW::MATH::GMATRIXF cameraMatrix;
+		matrixProxy.InverseF(viewMatrix, cameraMatrix);
+
+		// TODO: Part 4D 
+		float totalYChange = 0.0f;
+		const float cameraSpeed = 1.0f;
+
+		// Read input
+		float spaceKeyState = 0.0f; 
+		float leftShiftState = 0.0f; 
+		float rightTriggerState = 0.0f; 
+		float leftTriggerState = 0.0f;  
+		
+  		inputProxy.GetState(G_KEY_SPACE, spaceKeyState);
+		inputProxy.GetState(G_KEY_LEFTSHIFT, leftShiftState);
+		controllerProxy.GetState(0, G_RIGHT_TRIGGER_AXIS, rightTriggerState);
+		controllerProxy.GetState(0, G_LEFT_TRIGGER_AXIS, leftTriggerState);
+
+ 		totalYChange = spaceKeyState - leftShiftState + rightTriggerState - leftTriggerState;
+	
+		matrixProxy.TranslateLocalF(cameraMatrix, GW::MATH::GVECTORF{ 0, totalYChange * cameraSpeed * deltaTime, 0, 1 }, cameraMatrix);
+
+		matrixProxy.InverseF(cameraMatrix, viewMatrix);
+
+		shaderVars.viewMatrix = viewMatrix;
+
 	}
-	// TODO: Part 4C 
-	// TODO: Part 4D 
-	// TODO: Part 4E 
-	// TODO: Part 4F 
-	// TODO: Part 4G 
+		// TODO: Part 4E 
+		// TODO: Part 4F 
+		// TODO: Part 4G 
 
 private:
 	struct PipelineHandles
