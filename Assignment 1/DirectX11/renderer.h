@@ -66,6 +66,9 @@ class Renderer
 	std::chrono::steady_clock::time_point timePassed;
 
 	GW::MATH::GMATRIXF translationMatrix;
+	GW::MATH::GMATRIXF pitchMatrix;
+
+	unsigned int winHeight, winWidth = 0;
 
 
 
@@ -360,60 +363,89 @@ public:
 		timePassed = currentTime;
 
 		// TODO: Part 4C 
-		// inverse viewMatrix to set it into world space
+		// Inverse viewMatrix to set it into world space
 		GW::MATH::GMATRIXF cameraMatrix;
 		matrixProxy.InverseF(viewMatrix, cameraMatrix);
 
 		// TODO: Part 4D 
-		float totalYChange = 0.0f;
-		float totalZChange = 0.0f;
-		float totalXChange = 0.0f;
+		float totalYChange,
+			totalZChange,
+			totalXChange,
+			totalPitch = 0.0f;
+
 		const float cameraSpeed = 0.3f;
+		float perFrameSpeed = 0.0f;
+		float thumbStickSpeed = 0.0f;
+		float fov = G2D_DEGREE_TO_RADIAN(65.0f);
 
-		// Read input
-		float spaceKeyState, 
-			leftShiftState, 
-			wKeyState, 
-			sKeyState, 
-			aKeyState, 
-			dKeyState = 0.0f;
+		// Define keyboard and mouse input states
+		float spaceKeyState,
+			leftShiftState,
+			wKeyState,
+			sKeyState,
+			aKeyState,
+			dKeyState,
+			mouseXDelta,
+			mouseYDelta = 0.0f;
 
+		// Define controller input states
 		float rightTriggerState,
 			leftTriggerState,
 			leftStickYAxisState,
-			leftStickXAxisState = 0.0f;  
-		float perFrameSpeed = 0.0f;
+			leftStickXAxisState,
+			rightStickYAxisState = 0.0f;  
+
 		
+		win.GetHeight(winHeight);
+		win.GetWidth(winWidth);
+
+		// Read keyboard input states
   		inputProxy.GetState(G_KEY_SPACE, spaceKeyState);
 		inputProxy.GetState(G_KEY_LEFTSHIFT, leftShiftState);
 		inputProxy.GetState(G_KEY_W, wKeyState);
 		inputProxy.GetState(G_KEY_S, sKeyState);
 		inputProxy.GetState(G_KEY_A, aKeyState);
 		inputProxy.GetState(G_KEY_D, dKeyState);
+		inputProxy.GetMouseDelta(mouseXDelta, mouseYDelta);
+		
 
+		// Read controller input states
 		controllerProxy.GetState(0, G_RIGHT_TRIGGER_AXIS, rightTriggerState);
 		controllerProxy.GetState(0, G_LEFT_TRIGGER_AXIS, leftTriggerState);
 		controllerProxy.GetState(0, G_LY_AXIS, leftStickYAxisState);
 		controllerProxy.GetState(0, G_LX_AXIS, leftStickXAxisState);
+		controllerProxy.GetState(0, G_RY_AXIS, rightStickYAxisState);
 
+		// Update vertical movements
  		totalYChange = spaceKeyState - leftShiftState + rightTriggerState - leftTriggerState;
 		matrixProxy.TranslateLocalF(cameraMatrix, GW::MATH::GVECTORF{ 0, totalYChange * cameraSpeed * deltaTime, 0, 1 }, cameraMatrix);
 
 		// TODO: Part 4E 
+		// Update horizontal movements
 		perFrameSpeed = cameraSpeed * deltaTime;
 		totalZChange = wKeyState - sKeyState + leftStickYAxisState;
 		totalXChange = dKeyState - aKeyState + leftStickXAxisState;
 
 		matrixProxy.IdentityF(translationMatrix);
-		matrixProxy.TranslateLocalF( translationMatrix, GW::MATH::GVECTORF{ totalXChange * perFrameSpeed, 0, totalZChange * perFrameSpeed}, translationMatrix);
-		matrixProxy.MultiplyMatrixF(translationMatrix, cameraMatrix, cameraMatrix);
-		
-		matrixProxy.InverseF(cameraMatrix, viewMatrix);
+		matrixProxy.TranslateLocalF(translationMatrix, GW::MATH::GVECTORF{ totalXChange * perFrameSpeed, 0, totalZChange * perFrameSpeed}, translationMatrix);
 
+		// TODO: Part 4F 
+		thumbStickSpeed = G2D_PI * deltaTime;
+		totalPitch = fov * mouseYDelta / winHeight + rightStickYAxisState * thumbStickSpeed * (-1);
+		
+		matrixProxy.IdentityF(pitchMatrix);
+		matrixProxy.RotateXLocalF(pitchMatrix, totalPitch, pitchMatrix);
+
+		// Combine horizontal, veritcal, pitch, and raw movements
+		matrixProxy.MultiplyMatrixF(translationMatrix, cameraMatrix, cameraMatrix);
+		matrixProxy.MultiplyMatrixF(pitchMatrix, cameraMatrix, cameraMatrix);
+
+		// Return the cameraMatrix to view space
+		// then send the new viewMatrix to the GPU
+		matrixProxy.InverseF(cameraMatrix, viewMatrix);
 		shaderVars.viewMatrix = viewMatrix;
 
 	}
-		// TODO: Part 4F 
 		// TODO: Part 4G 
 
 private:
