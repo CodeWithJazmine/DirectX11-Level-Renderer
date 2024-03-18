@@ -1,4 +1,5 @@
 #include <d3dcompiler.h>	// required for compiling shaders on the fly, consider pre-compiling instead
+#include "../Assets/FSLogo.h"
 #pragma comment(lib, "d3dcompiler.lib") 
 
 void PrintLabeledDebugString(const char* label, const char* toPrint)
@@ -21,6 +22,7 @@ class Renderer
 	GW::GRAPHICS::GDirectX11Surface d3d;
 	// what we need at a minimum to draw a triangle
 	Microsoft::WRL::ComPtr<ID3D11Buffer>		vertexBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer>		indexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader>	vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader>	pixelShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout>	vertexFormat;
@@ -48,6 +50,7 @@ private:
 
 		InitializeVertexBuffer(creator);
 		// TODO: Part 1G 
+		InitializeIndexBuffer(creator);
 		// TODO: Part 2C 
 		InitializePipeline(creator);
 
@@ -57,13 +60,8 @@ private:
 
 	void InitializeVertexBuffer(ID3D11Device* creator)
 	{
-		float verts[] = {
-			0,   0.5f,
-			0.5f, -0.5f,
-			-0.5f, -0.5f
-		};
 		// TODO: Part 1C 
-		CreateVertexBuffer(creator, &verts[0], sizeof(verts));
+		CreateVertexBuffer(creator, &FSLogo_vertices[0], sizeof(OBJ_VERT) * FSLogo_vertexcount);
 	}
 	
 	void CreateVertexBuffer(ID3D11Device* creator, const void* data, unsigned int sizeInBytes)
@@ -71,6 +69,18 @@ private:
 		D3D11_SUBRESOURCE_DATA bData = { data, 0, 0 };
 		CD3D11_BUFFER_DESC bDesc(sizeInBytes, D3D11_BIND_VERTEX_BUFFER);
 		creator->CreateBuffer(&bDesc, &bData, vertexBuffer.GetAddressOf());
+	}
+
+	void InitializeIndexBuffer(ID3D11Device* creator)
+	{
+		CreateIndexBuffer(creator, &FSLogo_indices[0], sizeof(UINT) * FSLogo_indexcount);
+	}
+
+	void CreateIndexBuffer(ID3D11Device* creator, const void* data, unsigned int sizeInBytes)
+	{
+		D3D11_SUBRESOURCE_DATA bData = { data, 0, 0 };
+		CD3D11_BUFFER_DESC bDesc(sizeInBytes, D3D11_BIND_INDEX_BUFFER);
+		creator->CreateBuffer(&bDesc, &bData, indexBuffer.GetAddressOf());
 	}
 
 	void InitializePipeline(ID3D11Device* creator)
@@ -140,15 +150,31 @@ private:
 	void CreateVertexInputLayout(ID3D11Device* creator, Microsoft::WRL::ComPtr<ID3DBlob>& vsBlob)
 	{
 		// TODO: Part 1E 
-		D3D11_INPUT_ELEMENT_DESC attributes[1];
+		D3D11_INPUT_ELEMENT_DESC attributes[3];
 
 		attributes[0].SemanticName = "POSITION";
 		attributes[0].SemanticIndex = 0;
-		attributes[0].Format = DXGI_FORMAT_R32G32_FLOAT;
+		attributes[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
 		attributes[0].InputSlot = 0;
 		attributes[0].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
 		attributes[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 		attributes[0].InstanceDataStepRate = 0;
+
+		attributes[1].SemanticName = "UV";
+		attributes[1].SemanticIndex = 0;
+		attributes[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+		attributes[1].InputSlot = 0;
+		attributes[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+		attributes[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+		attributes[1].InstanceDataStepRate = 0;
+
+		attributes[2].SemanticName = "NORMAL";
+		attributes[2].SemanticIndex = 0;
+		attributes[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+		attributes[2].InputSlot = 0;
+		attributes[2].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+		attributes[2].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+		attributes[2].InstanceDataStepRate = 0;
 
 		creator->CreateInputLayout(attributes, ARRAYSIZE(attributes),
 			vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
@@ -165,7 +191,7 @@ public:
 		// TODO: Part 3B 
 		// TODO: Part 3C 
 		// TODO: Part 4D 
-		curHandles.context->Draw(3, 0); // TODO: Part 1D 
+		curHandles.context->DrawIndexed(FSLogo_indexcount, FSLogo_indices[0], 0); // TODO: Part 1D 
 		ReleasePipelineHandles(curHandles);
 	}
 
@@ -190,6 +216,7 @@ private:
 	{
 		SetRenderTargets(handles);
 		SetVertexBuffers(handles);
+		SetIndexBuffers(handles);
 		SetShaders(handles);
 
 		handles.context->IASetInputLayout(vertexFormat.Get());
@@ -204,10 +231,16 @@ private:
 
 	void SetVertexBuffers(PipelineHandles handles)
 	{
-		const UINT strides[] = { sizeof(float) * 2 }; // TODO: Part 1E 
+		const UINT strides[] = { sizeof(OBJ_VERT) }; // TODO: Part 1E 
 		const UINT offsets[] = { 0 };
 		ID3D11Buffer* const buffs[] = { vertexBuffer.Get() };
 		handles.context->IASetVertexBuffers(0, ARRAYSIZE(buffs), buffs, strides, offsets);
+		
+	}
+
+	void SetIndexBuffers(PipelineHandles handles)
+	{
+		handles.context->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 	}
 
 	void SetShaders(PipelineHandles handles)

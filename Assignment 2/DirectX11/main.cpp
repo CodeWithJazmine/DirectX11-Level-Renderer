@@ -8,9 +8,10 @@
 #define GATEWARE_DISABLE_GOPENGLSURFACE // we have another template for this
 #define GATEWARE_DISABLE_GVULKANSURFACE // we have another template for this
 // With what we want & what we don't defined we can include the API
-#include "../Gateware/Gateware.h"
+#include "../gateware-main/Gateware.h"
 #include "FileIntoString.h"
 #include "renderer.h" // example rendering code (not Gateware code!)
+#include "../Assets/FSLogo.h"
 // open some namespaces to compact the code a bit
 using namespace GW;
 using namespace CORE;
@@ -25,7 +26,8 @@ int main()
 	if (+win.Create(0, 0, 800, 600, GWindowStyle::WINDOWEDBORDERED))
 	{
 		// TODO: Part 1A 
-		float clr[] = { 57/255.0f, 1.0f, 20/255.0f, 1 }; // TODO: Part 1A (optional)
+		win.SetWindowName("Jazmine Chargualaf - Assignment 2 - DirextX11");
+		float clr[] = { 1.0f, 192 / 255.0f, 203 / 255.0f, 1 }; // TODO: Part 1A (optional)
 		msgs.Create([&](const GW::GEvent& e) {
 			GW::SYSTEM::GWindow::Events q;
 			if (+e.Read(q) && q == GWindow::Events::RESIZE)
