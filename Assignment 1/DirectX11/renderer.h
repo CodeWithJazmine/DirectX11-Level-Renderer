@@ -65,11 +65,18 @@ class Renderer
 
 	std::chrono::steady_clock::time_point timePassed;
 
+	GW::MATH::GMATRIXF cameraMatrix;
+	GW::MATH::GMATRIXF originalCameraMatrix;
+	GW::MATH::GMATRIXF savedCameraMatrix;
 	GW::MATH::GMATRIXF translationMatrix;
 	GW::MATH::GMATRIXF pitchMatrix;
+	GW::MATH::GMATRIXF yawMatrix;
 
-	unsigned int winHeight, winWidth = 0;
+	unsigned int screenHeight, screenWidth;
+	float screenAspectRatio;
 
+	float prevMouseX,
+		prevMouseY;
 
 
 
@@ -101,6 +108,7 @@ public:
 		InitializeWorldMatricesForCube();
 		
 		timePassed = std::chrono::steady_clock::now();
+		inputProxy.GetMousePosition(prevMouseX, prevMouseY);
 		
 		InitializeGraphics();
 	}
@@ -220,7 +228,7 @@ private:
 
 	void InitializeProjectionMatrix()
 	{
-		float fov = G2D_DEGREE_TO_RADIAN(65.0f);
+		float fov = G2D_DEGREE_TO_RADIAN_F(65.0f);
 		float aspectRatio;
 		d3d.GetAspectRatio(aspectRatio);
 		float nearPlane = 0.1f;
@@ -362,42 +370,52 @@ public:
 		float deltaTime = std::chrono::duration<float>(currentTime - timePassed).count();
 		timePassed = currentTime;
 
+		matrixProxy.IdentityF(originalCameraMatrix);
+		matrixProxy.IdentityF(savedCameraMatrix);
+
 		// TODO: Part 4C 
 		// Inverse viewMatrix to set it into world space
-		GW::MATH::GMATRIXF cameraMatrix;
 		matrixProxy.InverseF(viewMatrix, cameraMatrix);
 
 		// TODO: Part 4D 
-		float totalYChange,
-			totalZChange,
-			totalXChange,
-			totalPitch = 0.0f;
+		float totalYChange = 0.0f,
+			totalZChange = 0.0f,
+			totalXChange = 0.0f,
+			totalPitch = 0.0f,
+			totalYaw = 0.0f;
 
 		const float cameraSpeed = 0.3f;
 		float perFrameSpeed = 0.0f;
 		float thumbStickSpeed = 0.0f;
-		float fov = G2D_DEGREE_TO_RADIAN(65.0f);
+		float fov = G2D_DEGREE_TO_RADIAN_F(65.0f);
 
 		// Define keyboard and mouse input states
-		float spaceKeyState,
-			leftShiftState,
-			wKeyState,
-			sKeyState,
-			aKeyState,
-			dKeyState,
-			mouseXDelta,
+		float spaceKeyState = 0.0f,
+			leftShiftState = 0.0f,
+			wKeyState = 0.0f,
+			sKeyState = 0.0f,
+			aKeyState = 0.0f,
+			dKeyState = 0.0f,
+			mouseXDelta = 0.0f,
 			mouseYDelta = 0.0f;
 
-		// Define controller input states
-		float rightTriggerState,
-			leftTriggerState,
-			leftStickYAxisState,
-			leftStickXAxisState,
-			rightStickYAxisState = 0.0f;  
+		float mouseX = 0.0f,
+			mouseY = 0.0f;
 
-		
-		win.GetHeight(winHeight);
-		win.GetWidth(winWidth);
+		// Define controller input states
+		float rightTriggerState = 0.0f,
+			leftTriggerState = 0.0f,
+			leftStickYAxisState = 0.0f,
+			leftStickXAxisState = 0.0f,
+			rightStickYAxisState = 0.0f,
+			rightStickXAxisState = 0.0f;  
+
+		// Get window size information
+		screenHeight, screenWidth = 0;
+		screenAspectRatio = 0.0f;
+		win.GetHeight(screenHeight);
+		win.GetWidth(screenWidth);
+		d3d.GetAspectRatio(screenAspectRatio);
 
 		// Read keyboard input states
   		inputProxy.GetState(G_KEY_SPACE, spaceKeyState);
@@ -406,39 +424,46 @@ public:
 		inputProxy.GetState(G_KEY_S, sKeyState);
 		inputProxy.GetState(G_KEY_A, aKeyState);
 		inputProxy.GetState(G_KEY_D, dKeyState);
-		inputProxy.GetMouseDelta(mouseXDelta, mouseYDelta);
-		
-
+		inputProxy.GetMousePosition(mouseX, mouseY);
+		mouseXDelta = mouseX - prevMouseX;
+		mouseYDelta = mouseY - prevMouseY;
+		prevMouseX = mouseX;
+		prevMouseY = mouseY;
+	
 		// Read controller input states
 		controllerProxy.GetState(0, G_RIGHT_TRIGGER_AXIS, rightTriggerState);
 		controllerProxy.GetState(0, G_LEFT_TRIGGER_AXIS, leftTriggerState);
 		controllerProxy.GetState(0, G_LY_AXIS, leftStickYAxisState);
 		controllerProxy.GetState(0, G_LX_AXIS, leftStickXAxisState);
 		controllerProxy.GetState(0, G_RY_AXIS, rightStickYAxisState);
+		controllerProxy.GetState(0, G_RX_AXIS, rightStickXAxisState);
 
 		// Update vertical movements
  		totalYChange = spaceKeyState - leftShiftState + rightTriggerState - leftTriggerState;
-		matrixProxy.TranslateLocalF(cameraMatrix, GW::MATH::GVECTORF{ 0, totalYChange * cameraSpeed * deltaTime, 0, 1 }, cameraMatrix);
+		matrixProxy.TranslateGlobalF(cameraMatrix, GW::MATH::GVECTORF{ 0, totalYChange * cameraSpeed * deltaTime, 0, 1 }, cameraMatrix);
 
 		// TODO: Part 4E 
 		// Update horizontal movements
 		perFrameSpeed = cameraSpeed * deltaTime;
 		totalZChange = wKeyState - sKeyState + leftStickYAxisState;
 		totalXChange = dKeyState - aKeyState + leftStickXAxisState;
-
-		matrixProxy.IdentityF(translationMatrix);
-		matrixProxy.TranslateLocalF(translationMatrix, GW::MATH::GVECTORF{ totalXChange * perFrameSpeed, 0, totalZChange * perFrameSpeed}, translationMatrix);
+		// A direction vector for the camera's local space
+		GW::MATH::GVECTORF localMoveDirection = { totalXChange, 0.0f, totalZChange, 1.0f };
+		// Transform the direction vector from local space to world space
+		GW::MATH::GVector::TransformF(localMoveDirection, cameraMatrix, localMoveDirection);
+		// Translate the camera in the direction of the transformed vector
+		matrixProxy.TranslateGlobalF(cameraMatrix, GW::MATH::GVECTORF{ localMoveDirection.x * perFrameSpeed, 0.0f, localMoveDirection.z * perFrameSpeed, 1.0f }, cameraMatrix);
 
 		// TODO: Part 4F 
+		// Update pitch movements
 		thumbStickSpeed = G2D_PI * deltaTime;
-		totalPitch = fov * mouseYDelta / winHeight + rightStickYAxisState * thumbStickSpeed * (-1);
-		
-		matrixProxy.IdentityF(pitchMatrix);
-		matrixProxy.RotateXLocalF(pitchMatrix, totalPitch, pitchMatrix);
+		totalPitch = fov * mouseYDelta / screenHeight + rightStickYAxisState * thumbStickSpeed * -1;
+		matrixProxy.RotateXLocalF(cameraMatrix, totalPitch, cameraMatrix);
 
-		// Combine horizontal, veritcal, pitch, and raw movements
-		matrixProxy.MultiplyMatrixF(translationMatrix, cameraMatrix, cameraMatrix);
-		matrixProxy.MultiplyMatrixF(pitchMatrix, cameraMatrix, cameraMatrix);
+		// TODO: Part 4G
+		// Update yaw movements
+		totalYaw = fov * screenAspectRatio * mouseXDelta / screenWidth + rightStickXAxisState * thumbStickSpeed;
+		matrixProxy.RotateYGlobalF(cameraMatrix, totalYaw, cameraMatrix);
 
 		// Return the cameraMatrix to view space
 		// then send the new viewMatrix to the GPU
@@ -446,7 +471,6 @@ public:
 		shaderVars.viewMatrix = viewMatrix;
 
 	}
-		// TODO: Part 4G 
 
 private:
 	struct PipelineHandles
