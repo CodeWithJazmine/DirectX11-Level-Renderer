@@ -12,6 +12,18 @@ void PrintLabeledDebugString(const char* label, const char* toPrint)
 }
 
 // TODO: Part 2B 
+struct SceneData
+{
+	GW::MATH::GVECTORF sunDirection, sunColor; // lighting info
+	GW::MATH::GMATRIXF viewMatrix, projectionMatrix;
+};
+
+struct MeshData
+{
+	GW::MATH::GMATRIXF worldMatrix; // world space transformation
+	OBJ_ATTRIBUTES material; // material info (color, reflectivity, emissiveness, etc)
+
+};
 // TODO: Part 4E 
 
 // Creation, Rendering & Cleanup
@@ -23,20 +35,47 @@ class Renderer
 	// what we need at a minimum to draw a triangle
 	Microsoft::WRL::ComPtr<ID3D11Buffer>		vertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer>		indexBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer>	sceneConstantBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer>	meshConstantBuffer;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader>	vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader>	pixelShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout>	vertexFormat;
 
 	// TODO: Part 2A 
+	GW::MATH::GMatrix matrixProxy;
+	GW::MATH::GMATRIXF worldMatrix;
+	GW::MATH::GMATRIXF viewMatrix;
+	GW::MATH::GMATRIXF projectionMatrix;
+
+	GW::MATH::GVector vectorProxy;
+	GW::MATH::GVECTORF lightDirection;
+	GW::MATH::GVECTORF lightColor;
+
 	// TODO: Part 2B 
+	SceneData sceneData;
+	MeshData meshData;
+
+	std::chrono::steady_clock::time_point startTime;
+	float rotationSpeed;
 
 public:
 	Renderer(GW::SYSTEM::GWindow _win, GW::GRAPHICS::GDirectX11Surface _d3d)
 	{
 		win = _win;
 		d3d = _d3d;
+		matrixProxy.Create();
+		vectorProxy.Create();
+		startTime = std::chrono::steady_clock::now();
+
+		rotationSpeed = G2D_PI_F / 4.0f;
 		// TODO: Part 2A 
+		InitializeMatrices();
+		InitializeLight();
+
 		// TODO: Part 2B 
+		InitializeSceneData();
+		InitializeMeshData();
+
 		// TODO: Part 4E 
 		IntializeGraphics();
 	}
@@ -51,7 +90,11 @@ private:
 		InitializeVertexBuffer(creator);
 		// TODO: Part 1G 
 		InitializeIndexBuffer(creator);
+		
 		// TODO: Part 2C 
+		InitializeSceneConstantBuffer(creator, &sceneData);
+		InitializeMeshConstantBuffer(creator, &meshData);
+
 		InitializePipeline(creator);
 
 		// free temporary handle
@@ -70,7 +113,6 @@ private:
 		CD3D11_BUFFER_DESC bDesc(sizeInBytes, D3D11_BIND_VERTEX_BUFFER);
 		creator->CreateBuffer(&bDesc, &bData, vertexBuffer.GetAddressOf());
 	}
-
 	void InitializeIndexBuffer(ID3D11Device* creator)
 	{
 		CreateIndexBuffer(creator, &FSLogo_indices[0], sizeof(UINT) * FSLogo_indexcount);
@@ -83,6 +125,74 @@ private:
 		creator->CreateBuffer(&bDesc, &bData, indexBuffer.GetAddressOf());
 	}
 
+	void InitializeSceneConstantBuffer(ID3D11Device* creator, const void* data)
+	{
+		D3D11_SUBRESOURCE_DATA cbData = { data, 0, 0 };
+		CD3D11_BUFFER_DESC cbDesc(sizeof(SceneData), D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+		creator->CreateBuffer(&cbDesc, &cbData, sceneConstantBuffer.GetAddressOf());
+	}
+
+	void InitializeMeshConstantBuffer(ID3D11Device* creator, const void* data)
+	{
+		D3D11_SUBRESOURCE_DATA cbData = { data, 0, 0 };
+		CD3D11_BUFFER_DESC cbDesc(sizeof(MeshData), D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+		creator->CreateBuffer(&cbDesc, &cbData, meshConstantBuffer.GetAddressOf());
+	}
+
+	void InitializeMatrices()
+	{
+		// World Matrix: An identity matrix that slowly rotates along the Y axis over time.
+		auto currentTime = std::chrono::steady_clock::now();
+		float elapsedTime = std::chrono::duration<float>(currentTime - startTime).count();
+
+		// Calculate rotation angle based on elapsed time
+		float rotationAngle = elapsedTime * rotationSpeed;
+
+		// Update world matrix with rotation
+		matrixProxy.IdentityF(worldMatrix);
+		matrixProxy.RotateYGlobalF(worldMatrix, rotationAngle, worldMatrix);
+
+		// View: A camera positioned at 0.75x +0.25y -1.5z that is rotated to look at +0.15x +0.75y +0z.
+		matrixProxy.LookAtLHF(
+			GW::MATH::GVECTORF{ 0.75f, 0.25f, -1.5f }, // Camera position
+			GW::MATH::GVECTORF{ 0.15f, 0.75f, 0.0f }, // Look at position
+			GW::MATH::GVECTORF{ 0.0f, 1.0f, 0.0f }, // Up direction
+			viewMatrix ); 
+
+		// Projection: A vertical field of view of 65 degrees, and a near and far plane of 0.1 and 100 respectively.
+		float aspectRatio;
+		d3d.GetAspectRatio(aspectRatio);
+		matrixProxy.ProjectionDirectXLHF(
+			G2D_DEGREE_TO_RADIAN_F(65.0f),       // Field of view
+			aspectRatio,	// Aspect ratio
+			0.1f,                                     // Near plane
+			100.0f,                                  // Far plane
+			projectionMatrix );
+	}
+
+	void InitializeLight()
+	{
+		// Light Direction:  Forward with a strong tilt down and to the left. -1x -1y +2z (normalize)
+		vectorProxy.NormalizeF(GW::MATH::GVECTORF{ -1.0f, -1.0f, 2.0f }, lightDirection);
+		// Light Color: Almost white with a slight blueish tinge. 0.9r 0.9g 1.0b 1.0a
+		lightColor = GW::MATH::GVECTORF{ 0.9f, 0.9f, 1.0f, 1.0f };
+		
+	}
+
+	void InitializeSceneData()
+	{
+		sceneData.sunDirection = lightDirection;
+		sceneData.sunColor = lightColor;
+		sceneData.projectionMatrix = projectionMatrix;
+		sceneData.viewMatrix = viewMatrix;
+	}
+
+	void InitializeMeshData()
+	{
+		meshData.worldMatrix = worldMatrix;
+		meshData.material = FSLogo_materials[0].attrib;
+
+	}
 	void InitializePipeline(ID3D11Device* creator)
 	{
 		UINT compilerFlags = D3DCOMPILE_ENABLE_STRICTNESS;
@@ -190,8 +300,17 @@ public:
 		// TODO: Part 1H 
 		// TODO: Part 3B 
 		// TODO: Part 3C 
-		// TODO: Part 4D 
-		curHandles.context->DrawIndexed(FSLogo_indexcount, FSLogo_indices[0], 0); // TODO: Part 1D 
+		// TODO: Part 4D
+		D3D11_MAPPED_SUBRESOURCE mappedResource;
+		
+		for (int i = 0; i < 2; ++i) {
+			curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+			MeshData* meshBufferData = static_cast<MeshData*>(mappedResource.pData);
+			meshBufferData->material = FSLogo_materials[FSLogo_meshes[i].materialIndex].attrib;
+			curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
+			curHandles.context->DrawIndexed(FSLogo_meshes[i].indexCount, FSLogo_meshes[i].indexOffset, 0);
+		}
+
 		ReleasePipelineHandles(curHandles);
 	}
 
@@ -218,6 +337,7 @@ private:
 		SetVertexBuffers(handles);
 		SetIndexBuffers(handles);
 		SetShaders(handles);
+		SetConstantBuffers(handles);
 
 		handles.context->IASetInputLayout(vertexFormat.Get());
 		handles.context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -247,6 +367,12 @@ private:
 	{
 		handles.context->VSSetShader(vertexShader.Get(), nullptr, 0);
 		handles.context->PSSetShader(pixelShader.Get(), nullptr, 0);
+	}
+
+	void SetConstantBuffers(PipelineHandles handles)
+	{
+		handles.context->VSSetConstantBuffers(0, 1, sceneConstantBuffer.GetAddressOf());
+		handles.context->PSSetConstantBuffers(1, 1, meshConstantBuffer.GetAddressOf());
 	}
 
 	void ReleasePipelineHandles(PipelineHandles toRelease)

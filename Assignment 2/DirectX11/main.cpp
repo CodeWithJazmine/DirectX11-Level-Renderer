@@ -7,6 +7,7 @@
 #define GATEWARE_DISABLE_GRASTERSURFACE // we have another template for this
 #define GATEWARE_DISABLE_GOPENGLSURFACE // we have another template for this
 #define GATEWARE_DISABLE_GVULKANSURFACE // we have another template for this
+#define GATEWARE_ENABLE_MATH // enables Gateware's math library
 // With what we want & what we don't defined we can include the API
 #include "../gateware-main/Gateware.h"
 #include "FileIntoString.h"
