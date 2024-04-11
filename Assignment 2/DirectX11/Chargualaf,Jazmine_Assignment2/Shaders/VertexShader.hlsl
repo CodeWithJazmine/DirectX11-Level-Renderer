@@ -25,22 +25,22 @@ struct OutputToRasterizer
 {
     float4 posH : SV_POSITION; // position in homogenous projection space
     float3 posW : WORLD;       // position in world space (for lighting)
-    float3 normW : NORMAL;     // normal in world space (for lighting)
+    float3 normW : NORMAL;     // normal in worlds space (for lighting)
+};
+
+cbuffer MeshData : register(b1)
+{
+    float4x4 worldMatrix;
+    OBJ_ATTRIBUTES material;
 };
 
 cbuffer SceneData : register(b0)
 {
     float4 sunColor;
     float3 sunDirection;
+    int padding;
     float4x4 viewMatrix;
     float4x4 projectionMatrix;
-};
-
-cbuffer MeshData : register(b1)
-{
-    float4x4 worldMatrix;
-    float4x4 invWorldMatrix;
-    OBJ_ATTRIBUTES material;
 };
 
 struct VERTEX_IN
@@ -50,17 +50,21 @@ struct VERTEX_IN
     float3 normal : NORMAL;
 };
 
+struct VERTEX_OUT
+{
+    float4 position : SV_POSITION;
+};
+
 OutputToRasterizer main(VERTEX_IN inputVertex)
 {
     OutputToRasterizer output;
   
     output.posH = float4(inputVertex.position, 1.0f);
+    //output.posH = mul(output.posH, worldMatrix);
     output.posH = mul(output.posH, viewMatrix);
     output.posH = mul(output.posH, projectionMatrix);
     
+    output.normW = mul(inputVertex.normal, (float3x3) worldMatrix);
     
-    output.normW = normalize(mul((float3x3)(invWorldMatrix), inputVertex.normal));
-    output.posW = mul((float3x3) invWorldMatrix, inputVertex.normal);
-
     return output;
 }

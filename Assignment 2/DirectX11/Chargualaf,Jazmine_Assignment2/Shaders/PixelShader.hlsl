@@ -18,11 +18,11 @@ struct OBJ_ATTRIBUTES
     uint illum; // illumination model
 };
 
-
 cbuffer SceneData : register(b0)
 {
     float4 sunColor;
     float3 sunDirection;
+    int padding;
     float4x4 viewMatrix;
     float4x4 projectionMatrix;
 };
@@ -35,10 +35,11 @@ cbuffer MeshData : register(b1)
 
 
 
-float3 main(float4 posH : SV_POSITION, float3 posW : WORLD, float3 normW : NORMAL) : SV_TARGET
+float4 main(float4 posH : SV_POSITION, float3 posW : WORLD, float3 normW : NORMAL) : SV_TARGET
 {
-    float lightRatio = saturate(dot(-sunDirection, normalize(normW)));
-    float3 result = (lightRatio * sunColor.rgb * material.Kd);
-    return result;
-    //return float4(material.Kd, 1.0f);
+    //float3 lightRatio = saturate(dot(-sunDirection.xyz, normW));
+    //float3 result = lightRatio * sunColor.xyz * material.Kd;
+    //return float4(result, 1.0f);
+    
+    return float4(material.Kd, 1.0f);
 }

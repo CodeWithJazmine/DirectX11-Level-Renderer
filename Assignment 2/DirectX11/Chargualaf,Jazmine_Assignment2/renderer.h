@@ -21,7 +21,6 @@ struct SceneData
 struct MeshData
 {
 	GW::MATH::GMATRIXF worldMatrix; // world space transformation
-	GW::MATH::GMATRIXF invWorldMatrix;
 	OBJ_ATTRIBUTES material; // material info (color, reflectivity, emissiveness, etc)
 
 };
@@ -36,20 +35,19 @@ class Renderer
 	// what we need at a minimum to draw a triangle
 	Microsoft::WRL::ComPtr<ID3D11Buffer>		vertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer>		indexBuffer;
-	Microsoft::WRL::ComPtr<ID3D11Buffer>		sceneConstantBuffer;
-	Microsoft::WRL::ComPtr<ID3D11Buffer>		meshConstantBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer>	sceneConstantBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer>	meshConstantBuffer;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader>	vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader>	pixelShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout>	vertexFormat;
 
 	// TODO: Part 2A 
-	GW::MATH::GMatrix  matrixProxy;
+	GW::MATH::GMatrix matrixProxy;
 	GW::MATH::GMATRIXF worldMatrix;
-	GW::MATH::GMATRIXF invWorldMatrix;
 	GW::MATH::GMATRIXF viewMatrix;
 	GW::MATH::GMATRIXF projectionMatrix;
 
-	GW::MATH::GVector  vectorProxy;
+	GW::MATH::GVector vectorProxy;
 	GW::MATH::GVECTORF lightDirection;
 	GW::MATH::GVECTORF lightColor;
 
@@ -57,7 +55,7 @@ class Renderer
 	SceneData sceneData;
 	MeshData meshData;
 
-	std::chrono::steady_clock::time_point startTime;
+	std::chrono::steady_clock::time_point start;
 	float rotationSpeed;
 
 public:
@@ -67,9 +65,10 @@ public:
 		d3d = _d3d;
 		matrixProxy.Create();
 		vectorProxy.Create();
-		startTime = std::chrono::steady_clock::now();
 
-		rotationSpeed = G2D_PI_F / 4.0f;
+		start = std::chrono::steady_clock::now();
+		rotationSpeed = G2D_PI / 2.0f;
+
 		// TODO: Part 2A 
 		InitializeMatrices();
 		InitializeLight();
@@ -143,19 +142,17 @@ private:
 
 	void InitializeMatrices()
 	{
-		// World Matrix: An identity matrix that slowly rotates along the Y axis over time.
+		// World: An identity matrix that slowly rotates along the Y axis over time
 		auto currentTime = std::chrono::steady_clock::now();
-		float elapsedTime = std::chrono::duration<float>(currentTime - startTime).count();
+		float elapsedTime = std::chrono::duration<float>(currentTime - start).count();
 
 		// Calculate rotation angle based on elapsed time
-		float rotationAngle = elapsedTime * rotationSpeed;
+		const float rotationAngle = elapsedTime * rotationSpeed;
 
 		// Update world matrix with rotation
 		matrixProxy.IdentityF(worldMatrix);
-		matrixProxy.IdentityF(invWorldMatrix);
-		matrixProxy.InverseF(invWorldMatrix, invWorldMatrix);
-		//matrixProxy.InverseF(worldMatrix, worldMatrix);
-		//matrixProxy.RotateYGlobalF(worldMatrix, rotationAngle, worldMatrix);
+		matrixProxy.RotateYGlobalF(worldMatrix, rotationAngle, worldMatrix);
+		
 
 		// View: A camera positioned at 0.75x +0.25y -1.5z that is rotated to look at +0.15x +0.75y +0z.
 		matrixProxy.LookAtLHF(
@@ -169,9 +166,9 @@ private:
 		d3d.GetAspectRatio(aspectRatio);
 		matrixProxy.ProjectionDirectXLHF(
 			G2D_DEGREE_TO_RADIAN_F(65.0f),       // Field of view
-			aspectRatio,						 // Aspect ratio
-			0.1f,                                // Near plane
-			100.0f,                              // Far plane
+			aspectRatio,	// Aspect ratio
+			0.1f,                                     // Near plane
+			100.0f,                                  // Far plane
 			projectionMatrix );
 	}
 
@@ -180,7 +177,7 @@ private:
 		// Light Direction:  Forward with a strong tilt down and to the left. -1x -1y +2z (normalize)
 		vectorProxy.NormalizeF(GW::MATH::GVECTORF{ -1.0f, -1.0f, 2.0f }, lightDirection);
 		// Light Color: Almost white with a slight blueish tinge. 0.9r 0.9g 1.0b 1.0a
-		lightColor = GW::MATH::GVECTORF{ 255/0.9f, 255/0.9f, 255/1.0f, 255/1.0f };
+		lightColor = GW::MATH::GVECTORF{ 0.9f, 0.9f, 1.0f, 1.0f };
 		
 	}
 
@@ -196,8 +193,8 @@ private:
 	{
 		meshData.worldMatrix = worldMatrix;
 		meshData.material = FSLogo_materials[0].attrib;
-
 	}
+
 	void InitializePipeline(ID3D11Device* creator)
 	{
 		UINT compilerFlags = D3DCOMPILE_ENABLE_STRICTNESS;
@@ -307,46 +304,19 @@ public:
 		// TODO: Part 3C 
 		// TODO: Part 4D
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
-
-		/*curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
-		curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
 		
-		curHandles.context->Map(sceneConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		memcpy(mappedResource.pData, &sceneData, sizeof(SceneData));
-		curHandles.context->Unmap(sceneConstantBuffer.Get(), 0);
-
-	
 		for (int i = 0; i < 2; ++i) {
+
 			curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 			MeshData* meshBufferData = static_cast<MeshData*>(mappedResource.pData);
 			meshBufferData->material = FSLogo_materials[FSLogo_meshes[i].materialIndex].attrib;
 			curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
-			curHandles.context->DrawIndexed(FSLogo_meshes[i].indexCount, FSLogo_meshes[i].indexOffset, 0);
-		}*/
-
-		// Update scene constant buffer
-		curHandles.context->Map(sceneConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		memcpy(mappedResource.pData, &sceneData, sizeof(SceneData));
-		curHandles.context->Unmap(sceneConstantBuffer.Get(), 0);
-
-		for (int i = 0; i < 2; ++i) {
-			// Update mesh constant buffer
-			curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-			MeshData* meshBufferData = static_cast<MeshData*>(mappedResource.pData);
-			meshBufferData->material = FSLogo_materials[FSLogo_meshes[i].materialIndex].attrib;
-			curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
-
-			// Set material attributes
-			// Assuming FSLogo_materials is an array of material attributes, adjust this line accordingly
-			FSLogo_materials[FSLogo_meshes[i].materialIndex].attrib;
-
-			// Draw mesh
 			curHandles.context->DrawIndexed(FSLogo_meshes[i].indexCount, FSLogo_meshes[i].indexOffset, 0);
 		}
 
 		ReleasePipelineHandles(curHandles);
 	}
+
 
 private:
 	struct PipelineHandles
@@ -361,7 +331,7 @@ private:
 		PipelineHandles retval;
 		d3d.GetImmediateContext((void**)&retval.context);
 		d3d.GetRenderTargetView((void**)&retval.targetView);
-		d3d.GetDepthStencilView((void**)&retval.depthStencil);
+		d3d.GetDepthStencilView((void**)&retval.depthStencil)
 		return retval;
 	}
 
@@ -407,9 +377,8 @@ private:
 	{
 		handles.context->VSSetConstantBuffers(0, 1, sceneConstantBuffer.GetAddressOf());
 		handles.context->PSSetConstantBuffers(0, 1, sceneConstantBuffer.GetAddressOf());
-
-		handles.context->VSSetConstantBuffers(1, 1, meshConstantBuffer.GetAddressOf());
 		handles.context->PSSetConstantBuffers(1, 1, meshConstantBuffer.GetAddressOf());
+		
 	}
 
 	void ReleasePipelineHandles(PipelineHandles toRelease)
