@@ -35,10 +35,10 @@ cbuffer MeshData : register(b1)
 
 
 
-float3 main(float4 posH : SV_POSITION, float3 posW : WORLD, float3 normW : NORMAL) : SV_TARGET
+float4 main(float4 posH : SV_POSITION, float3 posW : WORLD, float3 normW : NORMAL) : SV_TARGET
 {
-    float lightRatio = saturate(dot(-sunDirection, normalize(normW)));
-    float3 result = (lightRatio * sunColor.rgb * material.Kd);
-    return result;
-    //return float4(material.Kd, 1.0f);
+    //float lightRatio = saturate(dot(-sunDirection, normalize(normW)));
+    //float3 result = (lightRatio * sunColor.rgb * material.Kd);
+    //return result;
+    return float4(material.Kd, 1.0f);
 }

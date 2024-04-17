@@ -39,7 +39,6 @@ cbuffer SceneData : register(b0)
 cbuffer MeshData : register(b1)
 {
     float4x4 worldMatrix;
-    float4x4 invWorldMatrix;
     OBJ_ATTRIBUTES material;
 };
 
@@ -59,8 +58,8 @@ OutputToRasterizer main(VERTEX_IN inputVertex)
     output.posH = mul(output.posH, projectionMatrix);
     
     
-    output.normW = normalize(mul((float3x3)(invWorldMatrix), inputVertex.normal));
-    output.posW = mul((float3x3) invWorldMatrix, inputVertex.normal);
+    output.normW = normalize(mul((float3x3)(worldMatrix), inputVertex.normal));
+    output.posW = mul((float3x3) worldMatrix, inputVertex.normal);
 
     return output;
 }

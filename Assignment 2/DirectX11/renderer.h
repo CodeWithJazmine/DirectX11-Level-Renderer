@@ -21,7 +21,6 @@ struct SceneData
 struct MeshData
 {
 	GW::MATH::GMATRIXF worldMatrix; // world space transformation
-	GW::MATH::GMATRIXF invWorldMatrix;
 	OBJ_ATTRIBUTES material; // material info (color, reflectivity, emissiveness, etc)
 
 };
@@ -144,16 +143,16 @@ private:
 	void InitializeMatrices()
 	{
 		// World Matrix: An identity matrix that slowly rotates along the Y axis over time.
-		auto currentTime = std::chrono::steady_clock::now();
-		float elapsedTime = std::chrono::duration<float>(currentTime - startTime).count();
+		//auto currentTime = std::chrono::steady_clock::now();
+		//float elapsedTime = std::chrono::duration<float>(currentTime - startTime).count();
 
 		// Calculate rotation angle based on elapsed time
-		float rotationAngle = elapsedTime * rotationSpeed;
+		//float rotationAngle = elapsedTime * rotationSpeed;
 
 		// Update world matrix with rotation
 		matrixProxy.IdentityF(worldMatrix);
-		matrixProxy.IdentityF(invWorldMatrix);
-		matrixProxy.InverseF(invWorldMatrix, invWorldMatrix);
+		//matrixProxy.IdentityF(invWorldMatrix);
+		//matrixProxy.InverseF(invWorldMatrix, invWorldMatrix);
 		//matrixProxy.InverseF(worldMatrix, worldMatrix);
 		//matrixProxy.RotateYGlobalF(worldMatrix, rotationAngle, worldMatrix);
 
@@ -308,40 +307,16 @@ public:
 		// TODO: Part 4D
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
 
-		/*curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
-		curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
-		
-		curHandles.context->Map(sceneConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		memcpy(mappedResource.pData, &sceneData, sizeof(SceneData));
-		curHandles.context->Unmap(sceneConstantBuffer.Get(), 0);
-
 	
-		for (int i = 0; i < 2; ++i) {
+		// Loop through each mesh to draw separately
+		for (int i = 0; i < 2; i++) {
+			// update material
+			meshData.material = FSLogo_materials[i].attrib;
+			// send updated mesh buffer to pixel shader
 			curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-			MeshData* meshBufferData = static_cast<MeshData*>(mappedResource.pData);
-			meshBufferData->material = FSLogo_materials[FSLogo_meshes[i].materialIndex].attrib;
+			memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
 			curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
-			curHandles.context->DrawIndexed(FSLogo_meshes[i].indexCount, FSLogo_meshes[i].indexOffset, 0);
-		}*/
-
-		// Update scene constant buffer
-		curHandles.context->Map(sceneConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		memcpy(mappedResource.pData, &sceneData, sizeof(SceneData));
-		curHandles.context->Unmap(sceneConstantBuffer.Get(), 0);
-
-		for (int i = 0; i < 2; ++i) {
-			// Update mesh constant buffer
-			curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-			MeshData* meshBufferData = static_cast<MeshData*>(mappedResource.pData);
-			meshBufferData->material = FSLogo_materials[FSLogo_meshes[i].materialIndex].attrib;
-			curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
-
-			// Set material attributes
-			// Assuming FSLogo_materials is an array of material attributes, adjust this line accordingly
-			FSLogo_materials[FSLogo_meshes[i].materialIndex].attrib;
-
-			// Draw mesh
+			// draw the mesh
 			curHandles.context->DrawIndexed(FSLogo_meshes[i].indexCount, FSLogo_meshes[i].indexOffset, 0);
 		}
 
