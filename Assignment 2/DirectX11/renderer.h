@@ -66,7 +66,6 @@ public:
 		d3d = _d3d;
 		matrixProxy.Create();
 		vectorProxy.Create();
-		startTime = std::chrono::steady_clock::now();
 
 		rotationSpeed = G2D_PI_F / 4.0f;
 		// TODO: Part 2A 
@@ -143,18 +142,9 @@ private:
 	void InitializeMatrices()
 	{
 		// World Matrix: An identity matrix that slowly rotates along the Y axis over time.
-		//auto currentTime = std::chrono::steady_clock::now();
-		//float elapsedTime = std::chrono::duration<float>(currentTime - startTime).count();
-
-		// Calculate rotation angle based on elapsed time
-		//float rotationAngle = elapsedTime * rotationSpeed;
-
-		// Update world matrix with rotation
 		matrixProxy.IdentityF(worldMatrix);
-		//matrixProxy.IdentityF(invWorldMatrix);
-		//matrixProxy.InverseF(invWorldMatrix, invWorldMatrix);
-		//matrixProxy.InverseF(worldMatrix, worldMatrix);
-		//matrixProxy.RotateYGlobalF(worldMatrix, rotationAngle, worldMatrix);
+		
+		//Rotate Y axis over time
 
 		// View: A camera positioned at 0.75x +0.25y -1.5z that is rotated to look at +0.15x +0.75y +0z.
 		matrixProxy.LookAtLHF(
@@ -179,7 +169,9 @@ private:
 		// Light Direction:  Forward with a strong tilt down and to the left. -1x -1y +2z (normalize)
 		vectorProxy.NormalizeF(GW::MATH::GVECTORF{ -1.0f, -1.0f, 2.0f }, lightDirection);
 		// Light Color: Almost white with a slight blueish tinge. 0.9r 0.9g 1.0b 1.0a
-		lightColor = GW::MATH::GVECTORF{ 255/0.9f, 255/0.9f, 255/1.0f, 255/1.0f };
+		//lightColor = GW::MATH::GVECTORF{ 255/0.9f, 255/0.9f, 255/1.0f, 255/1.0f };
+		lightColor = GW::MATH::GVECTORF{ 229.0f, 229.0f, 255.0f, 255.0f };
+
 		
 	}
 
@@ -307,6 +299,9 @@ public:
 		// TODO: Part 4D
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
 
+		curHandles.context->Map(sceneConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		memcpy(mappedResource.pData, &sceneData, sizeof(SceneData));
+		curHandles.context->Unmap(sceneConstantBuffer.Get(), 0);
 	
 		// Loop through each mesh to draw separately
 		for (int i = 0; i < 2; i++) {
@@ -316,6 +311,7 @@ public:
 			curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 			memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
 			curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
+
 			// draw the mesh
 			curHandles.context->DrawIndexed(FSLogo_meshes[i].indexCount, FSLogo_meshes[i].indexOffset, 0);
 		}

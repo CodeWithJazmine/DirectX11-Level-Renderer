@@ -30,8 +30,8 @@ struct OutputToRasterizer
 
 cbuffer SceneData : register(b0)
 {
-    float4 sunColor;
     float3 sunDirection;
+    float4 sunColor;
     float4x4 viewMatrix;
     float4x4 projectionMatrix;
 };
@@ -52,14 +52,14 @@ struct VERTEX_IN
 OutputToRasterizer main(VERTEX_IN inputVertex)
 {
     OutputToRasterizer output;
-  
+    
     output.posH = float4(inputVertex.position, 1.0f);
     output.posH = mul(output.posH, viewMatrix);
     output.posH = mul(output.posH, projectionMatrix);
     
+    float3x3 worldMatrix3x3 = (float3x3) worldMatrix;
+    output.posW = mul(worldMatrix3x3, inputVertex.position);
+    output.normW = mul(worldMatrix3x3, inputVertex.normal);
     
-    output.normW = normalize(mul((float3x3)(worldMatrix), inputVertex.normal));
-    output.posW = mul((float3x3) worldMatrix, inputVertex.normal);
-
     return output;
 }
