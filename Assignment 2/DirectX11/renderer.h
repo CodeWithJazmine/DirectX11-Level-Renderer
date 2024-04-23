@@ -140,6 +140,7 @@ private:
 		
 		//Rotate Y axis over time
 
+
 		// View: A camera positioned at 0.75x +0.25y -1.5z that is rotated to look at +0.15x +0.75y +0z.
 		matrixProxy.LookAtLHF(
 			GW::MATH::GVECTORF{ 0.75f, 0.25f, -1.5f }, // Camera position
@@ -164,7 +165,7 @@ private:
 		vectorProxy.NormalizeF(GW::MATH::GVECTORF{ -1.0f, -1.0f, 2.0f }, lightDirection);
 
 		// Light Color: Almost white with a slight blueish tinge. 0.9r 0.9g 1.0b 1.0a
-		lightColor = GW::MATH::GVECTORF{ 229.0f, 229.0f, 255.0f, 255.0f };
+		lightColor = GW::MATH::GVECTORF{ 0.9f, 0.9f, 1.0f, 1.0f };
 	}
 
 	void InitializeSceneData()
@@ -291,19 +292,19 @@ public:
 		// TODO: Part 4D
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
 
+		curHandles.context->Map(sceneConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		memcpy(mappedResource.pData, &sceneData, sizeof(SceneData));
+		curHandles.context->Unmap(sceneConstantBuffer.Get(), 0);
 	
 		// Loop through each mesh to draw separately
 		for (int i = 0; i < 2; i++) {
 			// update material
 			meshData.material = FSLogo_materials[i].attrib;
+
 			// send updated mesh buffer to pixel shader
 			curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 			memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
 			curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
-
-			curHandles.context->Map(sceneConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-			memcpy(mappedResource.pData, &sceneData, sizeof(SceneData));
-			curHandles.context->Unmap(sceneConstantBuffer.Get(), 0);
 
 			// draw the mesh
 			curHandles.context->DrawIndexed(FSLogo_meshes[i].indexCount, FSLogo_meshes[i].indexOffset, 0);

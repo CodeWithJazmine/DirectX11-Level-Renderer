@@ -35,7 +35,6 @@ cbuffer MeshData : register(b1)
 };
 
 
-
 float4 main(float4 posH : SV_POSITION, float3 posW : WORLD, float3 normW : NORMAL) : SV_TARGET
 {
     float lightRatio = clamp(dot(-sunDirection.xyz, normalize(normW)), 0, 1);
