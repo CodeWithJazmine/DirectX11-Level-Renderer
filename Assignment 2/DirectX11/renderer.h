@@ -22,7 +22,6 @@ struct MeshData
 {
 	GW::MATH::GMATRIXF worldMatrix; // world space transformation
 	OBJ_ATTRIBUTES material; // material info (color, reflectivity, emissiveness, etc)
-
 };
 // TODO: Part 4E 
 
@@ -44,7 +43,6 @@ class Renderer
 	// TODO: Part 2A 
 	GW::MATH::GMatrix  matrixProxy;
 	GW::MATH::GMATRIXF worldMatrix;
-	GW::MATH::GMATRIXF invWorldMatrix;
 	GW::MATH::GMATRIXF viewMatrix;
 	GW::MATH::GMATRIXF projectionMatrix;
 
@@ -56,9 +54,6 @@ class Renderer
 	SceneData sceneData;
 	MeshData meshData;
 
-	std::chrono::steady_clock::time_point startTime;
-	float rotationSpeed;
-
 public:
 	Renderer(GW::SYSTEM::GWindow _win, GW::GRAPHICS::GDirectX11Surface _d3d)
 	{
@@ -67,7 +62,6 @@ public:
 		matrixProxy.Create();
 		vectorProxy.Create();
 
-		rotationSpeed = G2D_PI_F / 4.0f;
 		// TODO: Part 2A 
 		InitializeMatrices();
 		InitializeLight();
@@ -168,11 +162,9 @@ private:
 	{
 		// Light Direction:  Forward with a strong tilt down and to the left. -1x -1y +2z (normalize)
 		vectorProxy.NormalizeF(GW::MATH::GVECTORF{ -1.0f, -1.0f, 2.0f }, lightDirection);
-		// Light Color: Almost white with a slight blueish tinge. 0.9r 0.9g 1.0b 1.0a
-		//lightColor = GW::MATH::GVECTORF{ 255/0.9f, 255/0.9f, 255/1.0f, 255/1.0f };
-		lightColor = GW::MATH::GVECTORF{ 229.0f, 229.0f, 255.0f, 255.0f };
 
-		
+		// Light Color: Almost white with a slight blueish tinge. 0.9r 0.9g 1.0b 1.0a
+		lightColor = GW::MATH::GVECTORF{ 229.0f, 229.0f, 255.0f, 255.0f };
 	}
 
 	void InitializeSceneData()
@@ -187,8 +179,8 @@ private:
 	{
 		meshData.worldMatrix = worldMatrix;
 		meshData.material = FSLogo_materials[0].attrib;
-
 	}
+
 	void InitializePipeline(ID3D11Device* creator)
 	{
 		UINT compilerFlags = D3DCOMPILE_ENABLE_STRICTNESS;
@@ -268,7 +260,7 @@ private:
 
 		attributes[1].SemanticName = "UV";
 		attributes[1].SemanticIndex = 0;
-		attributes[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+		attributes[1].Format = DXGI_FORMAT_R32G32B32_FLOAT;
 		attributes[1].InputSlot = 0;
 		attributes[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
 		attributes[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
@@ -299,9 +291,6 @@ public:
 		// TODO: Part 4D
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
 
-		curHandles.context->Map(sceneConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		memcpy(mappedResource.pData, &sceneData, sizeof(SceneData));
-		curHandles.context->Unmap(sceneConstantBuffer.Get(), 0);
 	
 		// Loop through each mesh to draw separately
 		for (int i = 0; i < 2; i++) {
@@ -311,6 +300,10 @@ public:
 			curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 			memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
 			curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
+
+			curHandles.context->Map(sceneConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+			memcpy(mappedResource.pData, &sceneData, sizeof(SceneData));
+			curHandles.context->Unmap(sceneConstantBuffer.Get(), 0);
 
 			// draw the mesh
 			curHandles.context->DrawIndexed(FSLogo_meshes[i].indexCount, FSLogo_meshes[i].indexOffset, 0);

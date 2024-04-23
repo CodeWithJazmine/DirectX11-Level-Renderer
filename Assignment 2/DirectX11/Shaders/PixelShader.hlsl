@@ -21,10 +21,11 @@ struct OBJ_ATTRIBUTES
 
 cbuffer SceneData : register(b0)
 {
-    float3 sunDirection;
+    float4 sunDirection;
     float4 sunColor;
     float4x4 viewMatrix;
     float4x4 projectionMatrix;
+    
 };
 
 cbuffer MeshData : register(b1)
@@ -37,10 +38,9 @@ cbuffer MeshData : register(b1)
 
 float4 main(float4 posH : SV_POSITION, float3 posW : WORLD, float3 normW : NORMAL) : SV_TARGET
 {
-    //light
-    float lightRatio = clamp(dot(-sunDirection, normW), 0, 1);
-    float3 diffuseColor = lightRatio * (float3) sunColor * material.Kd;
-    return float4(diffuseColor, 1.0f);
+    float lightRatio = clamp(dot(-sunDirection.xyz, normalize(normW)), 0, 1);
+    float3 result = lightRatio * sunColor.xyz * material.Kd;
+    return float4(result, 1.0f);
     
     //return float4(material.Kd, 1.0f);
 }
