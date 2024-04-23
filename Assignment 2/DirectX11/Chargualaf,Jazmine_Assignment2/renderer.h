@@ -1,6 +1,6 @@
 #include <d3dcompiler.h>	// required for compiling shaders on the fly, consider pre-compiling instead
 #include "../Assets/FSLogo.h"
-#include "XTime.h"
+//#include "XTime.h"
 #pragma comment(lib, "d3dcompiler.lib") 
 
 void PrintLabeledDebugString(const char* label, const char* toPrint)
@@ -53,16 +53,12 @@ class Renderer
 	GW::MATH::GVector  vectorProxy;
 	GW::MATH::GVECTORF lightDirection;
 	GW::MATH::GVECTORF lightColor;
-	GW::MATH::GVECTORF sunAmbient;
 
 	// TODO: Part 2B 
 	SceneData sceneData;
 	MeshData meshData;
 
-	XTime timer;
-	bool firstFrame;
-	std::chrono::steady_clock::time_point timePassed;
-	
+	//XTime timer;
 
 public:
 	Renderer(GW::SYSTEM::GWindow _win, GW::GRAPHICS::GDirectX11Surface _d3d)
@@ -148,9 +144,8 @@ private:
 	{
 		// World Matrix: An identity matrix that slowly rotates along the Y axis over time.
 		matrixProxy.IdentityF(worldMatrix);
-		matrixProxy.IdentityF(rotationMatrix);
 
-		
+		//Rotate Y axis over time
 
 		// View: A camera positioned at 0.75x +0.25y -1.5z that is rotated to look at +0.15x +0.75y +0z.
 		matrixProxy.LookAtLHF(
@@ -177,8 +172,6 @@ private:
 
 		// Light Color: Almost white with a slight blueish tinge. 0.9r 0.9g 1.0b 1.0a
 		lightColor = GW::MATH::GVECTORF{ 0.9f, 0.9f, 1.0f, 1.0f };
-
-		sunAmbient = GW::MATH::GVECTORF{ 0.25f, 0.25f, 0.35f };
 	}
 
 	void InitializeSceneData()
@@ -187,8 +180,6 @@ private:
 		sceneData.sunColor = lightColor;
 		sceneData.projectionMatrix = projectionMatrix;
 		sceneData.viewMatrix = viewMatrix;
-		sceneData.sunAmbient = sunAmbient;
-		sceneData.cameraPos = GW::MATH::GVECTORF{ 0.75f, 0.25f, -1.5f };
 	}
 
 	void InitializeMeshData()
@@ -306,27 +297,20 @@ public:
 		// TODO: Part 3C 
 		// TODO: Part 4D
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
-		// Update rotation angle based on elapsed time
-		timer.Signal();
-		float deltaTime = timer.Delta();
-		float rotationRate = 45.0f; // Adjust the rotation rate as needed
-		float rotationAngle = rotationRate * deltaTime;
 
-		GW::MATH::GVECTORF rotationAxis = GW::MATH::GVECTORF{ 0.0f, 1.0f, 0.0f }; // Y-axis
-		matrixProxy.RotationByVectorF(rotationAxis, G2D_DEGREE_TO_RADIAN_F(rotationAngle), rotationMatrix);
 
-		/*curHandles.context->Map(sceneConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		curHandles.context->Map(sceneConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 		memcpy(mappedResource.pData, &sceneData, sizeof(SceneData));
-		curHandles.context->Unmap(sceneConstantBuffer.Get(), 0);*/
+		curHandles.context->Unmap(sceneConstantBuffer.Get(), 0);
 	
 		// Loop through each mesh to draw separately
 		for (int i = 0; i < 2; i++) {
 			
 			// update world matrix for logo rotation
-			if (i == 1)
+			/*if (i == 1)
 			{
-				//meshData.worldMatrix = rotationMatrix;
-			}
+				meshData.worldMatrix = rotationMatrix;
+			}*/
 			// update material
 			meshData.material = FSLogo_materials[i].attrib;
 

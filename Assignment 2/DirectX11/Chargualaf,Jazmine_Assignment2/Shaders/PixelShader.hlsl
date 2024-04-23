@@ -25,8 +25,7 @@ cbuffer SceneData : register(b0)
     float4 sunColor;
     float4x4 viewMatrix;
     float4x4 projectionMatrix;
-    float4 sunAmbient;
-    float4 cameraPos;
+    
 };
 
 cbuffer MeshData : register(b1)
@@ -39,7 +38,6 @@ cbuffer MeshData : register(b1)
 float4 main(float4 posH : SV_POSITION, float3 posW : WORLD, float3 normW : NORMAL) : SV_TARGET
 {
     float lightRatio = clamp(dot(-sunDirection.xyz, normalize(normW)), 0, 1);
-    lightRatio = clamp(lightRatio + sunAmbient, 0, 1);
     float3 result = lightRatio * sunColor.xyz * material.Kd;
     return float4(result, 1.0f);
     
