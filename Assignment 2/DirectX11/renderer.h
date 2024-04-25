@@ -145,8 +145,6 @@ private:
 		matrixProxy.IdentityF(worldMatrix);
 		matrixProxy.IdentityF(rotationMatrix);
 
-		
-
 		// View: A camera positioned at 0.75x +0.25y -1.5z that is rotated to look at +0.15x +0.75y +0z.
 		matrixProxy.LookAtLHF(
 			GW::MATH::GVECTORF{ 0.75f, 0.25f, -1.5f }, // Camera position
@@ -169,10 +167,9 @@ private:
 	{
 		// Light Direction:  Forward with a strong tilt down and to the left. -1x -1y +2z (normalize)
 		vectorProxy.NormalizeF(GW::MATH::GVECTORF{ -1.0f, -1.0f, 2.0f }, lightDirection);
-
 		// Light Color: Almost white with a slight blueish tinge. 0.9r 0.9g 1.0b 1.0a
 		lightColor = GW::MATH::GVECTORF{ 0.9f, 0.9f, 1.0f, 1.0f };
-
+		// Sun Ambient: 25% red, 25% green, and 35% blue
 		sunAmbient = GW::MATH::GVECTORF{ 0.25f, 0.25f, 0.35f };
 	}
 
@@ -183,7 +180,7 @@ private:
 		sceneData.projectionMatrix = projectionMatrix;
 		sceneData.viewMatrix = viewMatrix;
 		sceneData.sunAmbient = sunAmbient;
-		sceneData.cameraPos = GW::MATH::GVECTORF{ 0.75f, 0.25f, -1.5f };
+		sceneData.cameraPos = viewMatrix.row1;
 	}
 
 	void InitializeMeshData()
@@ -305,11 +302,11 @@ public:
 		// Loop through each mesh to draw separately
 		for (int i = 0; i < 2; i++) {
 			
-			// update world matrix for logo rotation
-			if (i == 1)
-				meshData.worldMatrix = rotationMatrix;
-			else
+			// update world matrix for rotation
+			if (i == 0) // text
 				meshData.worldMatrix = worldMatrix;
+			else if (i == 1) // logo
+				meshData.worldMatrix = rotationMatrix;
 
 			// update material
 			meshData.material = FSLogo_materials[i].attrib;
@@ -408,6 +405,10 @@ public:
 
 	void Update()
 	{
-		matrixProxy.RotateYGlobalF(rotationMatrix, G2D_DEGREE_TO_RADIAN_F(0.5f), rotationMatrix);
+		static auto start = std::chrono::steady_clock::now();
+		double timePassed = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+		double rotationSpeed = timePassed * 35.0f;
+		matrixProxy.RotateYGlobalF(rotationMatrix, G2D_DEGREE_TO_RADIAN_F(rotationSpeed), rotationMatrix);
+		start = std::chrono::steady_clock::now();
 	}
 };
