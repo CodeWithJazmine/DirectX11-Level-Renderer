@@ -1,6 +1,5 @@
 #include <d3dcompiler.h>	// required for compiling shaders on the fly, consider pre-compiling instead
 #include "../Assets/FSLogo.h"
-#include "XTime.h"
 #pragma comment(lib, "d3dcompiler.lib") 
 
 void PrintLabeledDebugString(const char* label, const char* toPrint)
@@ -58,10 +57,6 @@ class Renderer
 	// TODO: Part 2B 
 	SceneData sceneData;
 	MeshData meshData;
-
-	XTime timer;
-	bool firstFrame;
-	std::chrono::steady_clock::time_point timePassed;
 	
 
 public:
@@ -306,27 +301,16 @@ public:
 		// TODO: Part 3C 
 		// TODO: Part 4D
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
-		// Update rotation angle based on elapsed time
-		timer.Signal();
-		float deltaTime = timer.Delta();
-		float rotationRate = 45.0f; // Adjust the rotation rate as needed
-		float rotationAngle = rotationRate * deltaTime;
-
-		GW::MATH::GVECTORF rotationAxis = GW::MATH::GVECTORF{ 0.0f, 1.0f, 0.0f }; // Y-axis
-		matrixProxy.RotationByVectorF(rotationAxis, G2D_DEGREE_TO_RADIAN_F(rotationAngle), rotationMatrix);
-
-		/*curHandles.context->Map(sceneConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		memcpy(mappedResource.pData, &sceneData, sizeof(SceneData));
-		curHandles.context->Unmap(sceneConstantBuffer.Get(), 0);*/
 	
 		// Loop through each mesh to draw separately
 		for (int i = 0; i < 2; i++) {
 			
 			// update world matrix for logo rotation
 			if (i == 1)
-			{
-				//meshData.worldMatrix = rotationMatrix;
-			}
+				meshData.worldMatrix = rotationMatrix;
+			else
+				meshData.worldMatrix = worldMatrix;
+
 			// update material
 			meshData.material = FSLogo_materials[i].attrib;
 
@@ -341,6 +325,8 @@ public:
 
 		ReleasePipelineHandles(curHandles);
 	}
+
+	
 
 private:
 	struct PipelineHandles
@@ -418,5 +404,10 @@ public:
 	~Renderer()
 	{
 		// ComPtr will auto release so nothing to do here yet 
+	}
+
+	void Update()
+	{
+		matrixProxy.RotateYGlobalF(rotationMatrix, G2D_DEGREE_TO_RADIAN_F(0.5f), rotationMatrix);
 	}
 };

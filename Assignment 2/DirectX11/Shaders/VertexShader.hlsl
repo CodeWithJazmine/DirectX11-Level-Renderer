@@ -27,7 +27,8 @@ cbuffer SceneData : register(b0)
     float4 sunColor;
     float4x4 viewMatrix;
     float4x4 projectionMatrix;
-    
+    float4 sunAmbient;
+    float4 cameraPos;
 };
 
 cbuffer MeshData : register(b1)

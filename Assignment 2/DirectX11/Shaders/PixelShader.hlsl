@@ -38,10 +38,17 @@ cbuffer MeshData : register(b1)
 
 float4 main(float4 posH : SV_POSITION, float3 posW : WORLD, float3 normW : NORMAL) : SV_TARGET
 {
-    float lightRatio = clamp(dot(-sunDirection.xyz, normalize(normW)), 0, 1);
-    lightRatio = clamp(lightRatio + sunAmbient, 0, 1);
+    float lightRatio = saturate(dot(-sunDirection.xyz, normalize(normW)));
+    lightRatio = saturate(lightRatio + sunAmbient);
     float3 result = lightRatio * sunColor.xyz * material.Kd;
-    return float4(result, 1.0f);
     
-    //return float4(material.Kd, 1.0f);
+    //float3 viewDir = normalize(cameraPos - posH);
+    //float3 exactVector = reflect(-sunDirection.xyz, viewDir);
+    //float intensity = max(pow(saturate(dot(normalize(normW), exactVector)), (material.Ns + 0.000001f)), 0);
+
+    //float3 reflectedLight = sunColor.xyz * (material.Ks + 0.000001f) * intensity;
+    //result += reflectedLight;
+
+    return float4(result, 1.0f);
 }
+
