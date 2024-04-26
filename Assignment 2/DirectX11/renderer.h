@@ -30,6 +30,9 @@ struct MeshData
 // Creation, Rendering & Cleanup
 class Renderer
 {
+	// handle to renderer
+	//Level_Data& level;
+
 	// proxy handles
 	GW::SYSTEM::GWindow win;
 	GW::GRAPHICS::GDirectX11Surface d3d;
@@ -60,10 +63,11 @@ class Renderer
 	
 
 public:
-	Renderer(GW::SYSTEM::GWindow _win, GW::GRAPHICS::GDirectX11Surface _d3d)
+	Renderer(GW::SYSTEM::GWindow _win, GW::GRAPHICS::GDirectX11Surface _d3d/*, Level_Data& _lvl*/)
 	{
 		win = _win;
 		d3d = _d3d;
+
 		matrixProxy.Create();
 		vectorProxy.Create();
 
