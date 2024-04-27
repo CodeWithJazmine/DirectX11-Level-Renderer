@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(Assignment_2_D3D11)
+project(Assignment_LR_D3D11)
 
 # CMake FXC shader compilation, add any shaders you want compiled here
 set(VERTEX_SHADERS 
@@ -20,14 +20,14 @@ set(SOURCE_CODE
 	renderer.h
 	FileIntoString.h
 	h2bParser.h
-	load_data_oriented.h
+	load_object_oriented.h
 	#TODO: Part 1B (optional)
 )
 
 if(WIN32)
 # by default CMake selects "ALL_BUILD" as the startup project 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} 
-	PROPERTY VS_STARTUP_PROJECT Assignment_2_D3D11)
+	PROPERTY VS_STARTUP_PROJECT Assignment_LR_D3D11)
 
 	#this will tell Visual Studio to put the shaders under their own group in the solution explorer 
 	set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -41,7 +41,7 @@ ADD_DEFINITIONS(-D_UNICODE)
 
 
 
-add_executable (Assignment_2_D3D11 
+add_executable (Assignment_LR_D3D11 
 	${SOURCE_CODE}
 	${VERTEX_SHADERS}
 	${PIXEL_SHADERS}
