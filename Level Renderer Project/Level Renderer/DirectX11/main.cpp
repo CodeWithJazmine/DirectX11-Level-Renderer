@@ -23,7 +23,6 @@ using namespace GRAPHICS;
 // lets pop a window and use D3D11 to clear to a green screen
 int main()
 {
-
 	GWindow win;
 	GEventResponder msgs;
 	GDirectX11Surface d3d11;
@@ -40,7 +39,7 @@ int main()
 		win.Register(msgs);
 		if (+d3d11.Create(win, GW::GRAPHICS::DEPTH_BUFFER_SUPPORT))
 		{
-			Renderer renderer(win, d3d11);
+			RenderManager renderer(win, d3d11);
 			while (+win.ProcessWindowEvents())
 			{
 				IDXGISwapChain* swap;
@@ -54,7 +53,7 @@ int main()
 				{
 					con->ClearRenderTargetView(view, clr);
 					con->ClearDepthStencilView(depth, D3D11_CLEAR_DEPTH, 1, 0);
-					renderer.Update();
+					//renderer.Update();
 					renderer.Render();
 					swap->Present(1, 0);
 					// release incremented COM reference counts
