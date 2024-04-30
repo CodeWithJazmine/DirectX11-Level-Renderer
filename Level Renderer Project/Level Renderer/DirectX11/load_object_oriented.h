@@ -28,9 +28,8 @@ struct SceneData
 struct MeshData
 {
 	GW::MATH::GMATRIXF worldMatrix; // world space transformation
-	OBJ_ATTRIBUTES material; // material info (color, reflectivity, emissiveness, etc)
+	H2B::ATTRIBUTES material; // material info (color, reflectivity, emissiveness, etc)
 };
-
 
 
 // class Model contains everyhting needed to draw a single 3D model
@@ -41,13 +40,8 @@ class Model {
 	H2B::Parser cpuModel; // reads the .h2b format
 	// Shader variables needed by this model. 
 	GW::MATH::GMATRIXF world;// TODO: Add matrix/light/etc vars..
-	// TODO: API Rendering vars here (unique to this model)
-	// Vertex Buffer
-	// Index Buffer
-	// Pipeline/State Objects
-	// Uniform/ShaderVariable Buffer
-	// Vertex/Pixel Shaders
-		// what we need at a minimum to draw a triangle
+
+	// what we need at a minimum to draw a triangle
 	Microsoft::WRL::ComPtr<ID3D11Buffer>		vertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer>		indexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer>		sceneConstantBuffer;
@@ -72,6 +66,23 @@ class Model {
 	SceneData sceneData;
 	MeshData meshData;
 
+	GW::INPUT::GInput inputProxy;
+	GW::INPUT::GController controllerProxy;
+
+	std::chrono::steady_clock::time_point timePassed;
+
+	GW::MATH::GMATRIXF cameraMatrix;
+	GW::MATH::GMATRIXF originalCameraMatrix;
+	GW::MATH::GMATRIXF savedCameraMatrix;
+	GW::MATH::GMATRIXF translationMatrix;
+	GW::MATH::GMATRIXF pitchMatrix;
+	GW::MATH::GMATRIXF yawMatrix;
+
+	unsigned int screenHeight, screenWidth;
+	float screenAspectRatio;
+
+	float prevMouseX,
+		prevMouseY;
 public:
 	inline void SetName(std::string modelName) {
 		name = modelName;
@@ -96,8 +107,13 @@ public:
 		InitializeSceneData();
 		InitializeMeshData();
 
+		timePassed = std::chrono::steady_clock::now();
+		inputProxy.GetMousePosition(prevMouseX, prevMouseY);
+
 		// TODO: Part 4E 
 		IntializeGraphics(d3d);
+
+		return false;
 	}
 	bool DrawModel(GW::SYSTEM::GWindow win, GW::GRAPHICS::GDirectX11Surface d3d) {
 		// TODO: Use chosen API to setup the pipeline for this model and draw it
@@ -109,32 +125,29 @@ public:
 		// TODO: Part 4D
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
 
-		// Loop through each mesh to draw separately
-		for (int i = 0; i < 2; i++) {
+		// update material
+		meshData.worldMatrix = world;
+		meshData.material = cpuModel.materials[0].attrib;
 
-			// update world matrix for rotation
-			if (i == 0) // text
-				meshData.worldMatrix = worldMatrix;
-			else if (i == 1) // logo
-				meshData.worldMatrix = rotationMatrix;
+		// send updated mesh buffer to pixel shader
+		curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
+		curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
 
-			// update material
-			meshData.material = FSLogo_materials[i].attrib;
-
-			// send updated mesh buffer to pixel shader
-			curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-			memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
-			curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
-
-			// draw the mesh
-			curHandles.context->DrawIndexed(FSLogo_meshes[i].indexCount, FSLogo_meshes[i].indexOffset, 0);
-		}
+		curHandles.context->DrawIndexed(cpuModel.meshes[0].drawInfo.indexCount, cpuModel.meshes[0].drawInfo.indexOffset, 0);
+		// draw the mesh
+		/*for (auto& m : cpuModel.meshes)
+		{
+			curHandles.context->DrawIndexed(m.drawInfo.indexCount, m.drawInfo.indexOffset, 0);
+		}*/
 
 		ReleasePipelineHandles(curHandles);
+
+		return false;
 	}
 	bool FreeResources(/*pass handle to API device if needed*/) {
 		// TODO: Use chosen API to free all GPU resources used by this model
-		
+		return true;
 	}
 
 private:
@@ -161,7 +174,7 @@ private:
 	void InitializeVertexBuffer(ID3D11Device* creator)
 	{
 		// TODO: Part 1C 
-		CreateVertexBuffer(creator, &FSLogo_vertices[0], sizeof(OBJ_VERT) * FSLogo_vertexcount);
+		CreateVertexBuffer(creator, cpuModel.vertices.data(), sizeof(H2B::VERTEX) * cpuModel.vertices.size());
 	}
 
 	void CreateVertexBuffer(ID3D11Device* creator, const void* data, unsigned int sizeInBytes)
@@ -172,14 +185,14 @@ private:
 	}
 	void InitializeIndexBuffer(ID3D11Device* creator)
 	{
-		CreateIndexBuffer(creator, &FSLogo_indices[0], sizeof(UINT) * FSLogo_indexcount);
+		CreateIndexBuffer(creator, cpuModel.indices.data(), sizeof(unsigned int) * cpuModel.indices.size());
 	}
 
 	void CreateIndexBuffer(ID3D11Device* creator, const void* data, unsigned int sizeInBytes)
 	{
-		D3D11_SUBRESOURCE_DATA bData = { data, 0, 0 };
-		CD3D11_BUFFER_DESC bDesc(sizeInBytes, D3D11_BIND_INDEX_BUFFER);
-		creator->CreateBuffer(&bDesc, &bData, indexBuffer.GetAddressOf());
+		D3D11_SUBRESOURCE_DATA iData = { data, 0, 0 };
+		CD3D11_BUFFER_DESC iDesc(sizeInBytes, D3D11_BIND_INDEX_BUFFER);
+		creator->CreateBuffer(&iDesc, &iData, indexBuffer.GetAddressOf());
 	}
 
 	void InitializeSceneConstantBuffer(ID3D11Device* creator, const void* data)
@@ -242,8 +255,10 @@ private:
 
 	void InitializeMeshData()
 	{
-		meshData.worldMatrix = worldMatrix;
-		meshData.material = FSLogo_materials[0].attrib;
+		SetWorldMatrix(worldMatrix);
+		meshData.worldMatrix = world;
+		//meshData.material = FSLogo_materials[0].attrib;
+		meshData.material = cpuModel.materials[0].attrib;
 	}
 
 	void InitializePipeline(ID3D11Device* creator)
@@ -343,7 +358,7 @@ private:
 			vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
 			vertexFormat.GetAddressOf());
 	}
-	
+
 
 private:
 
@@ -383,7 +398,7 @@ private:
 
 	void SetVertexBuffers(PipelineHandles handles)
 	{
-		const UINT strides[] = { sizeof(OBJ_VERT) }; // TODO: Part 1E 
+		const UINT strides[] = { sizeof(H2B::VERTEX) }; // TODO: Part 1E 
 		const UINT offsets[] = { 0 };
 		ID3D11Buffer* const buffs[] = { vertexBuffer.Get() };
 		handles.context->IASetVertexBuffers(0, ARRAYSIZE(buffs), buffs, strides, offsets);
@@ -417,6 +432,7 @@ private:
 		toRelease.context->Release();
 	}
 
+public:
 	void Update()
 	{
 		static auto start = std::chrono::steady_clock::now();
@@ -425,6 +441,116 @@ private:
 		matrixProxy.RotateYGlobalF(rotationMatrix, G2D_DEGREE_TO_RADIAN_F(rotationSpeed), rotationMatrix);
 		start = std::chrono::steady_clock::now();
 	}
+
+	void UpdateCamera(GW::SYSTEM::GWindow win, GW::GRAPHICS::GDirectX11Surface d3d)
+	{
+		// Get delta time (the time passed since last function call)
+		std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
+		float deltaTime = std::chrono::duration<float>(currentTime - timePassed).count();
+		timePassed = currentTime;
+
+		matrixProxy.IdentityF(originalCameraMatrix);
+		matrixProxy.IdentityF(savedCameraMatrix);
+
+		// TODO: Part 4C 
+		// Inverse viewMatrix to set it into world space
+		matrixProxy.InverseF(viewMatrix, cameraMatrix);
+
+		// TODO: Part 4D 
+		float totalYChange = 0.0f,
+			totalZChange = 0.0f,
+			totalXChange = 0.0f,
+			totalPitch = 0.0f,
+			totalYaw = 0.0f;
+
+		const float cameraSpeed = 0.3f;
+		float perFrameSpeed = 0.0f;
+		float thumbStickSpeed = 0.0f;
+		float fov = G2D_DEGREE_TO_RADIAN_F(65.0f);
+
+		// Define keyboard and mouse input states
+		float spaceKeyState = 0.0f,
+			leftShiftState = 0.0f,
+			wKeyState = 0.0f,
+			sKeyState = 0.0f,
+			aKeyState = 0.0f,
+			dKeyState = 0.0f,
+			mouseXDelta = 0.0f,
+			mouseYDelta = 0.0f;
+
+		float mouseX = 0.0f,
+			mouseY = 0.0f;
+
+		// Define controller input states
+		float rightTriggerState = 0.0f,
+			leftTriggerState = 0.0f,
+			leftStickYAxisState = 0.0f,
+			leftStickXAxisState = 0.0f,
+			rightStickYAxisState = 0.0f,
+			rightStickXAxisState = 0.0f;
+
+		// Get window size information
+		screenHeight, screenWidth = 0;
+		screenAspectRatio = 0.0f;
+		win.GetHeight(screenHeight);
+		win.GetWidth(screenWidth);
+		d3d.GetAspectRatio(screenAspectRatio);
+
+		// Read keyboard input states
+		inputProxy.GetState(G_KEY_SPACE, spaceKeyState);
+		inputProxy.GetState(G_KEY_LEFTSHIFT, leftShiftState);
+		inputProxy.GetState(G_KEY_W, wKeyState);
+		inputProxy.GetState(G_KEY_S, sKeyState);
+		inputProxy.GetState(G_KEY_A, aKeyState);
+		inputProxy.GetState(G_KEY_D, dKeyState);
+		inputProxy.GetMousePosition(mouseX, mouseY);
+		mouseXDelta = mouseX - prevMouseX;
+		mouseYDelta = mouseY - prevMouseY;
+		prevMouseX = mouseX;
+		prevMouseY = mouseY;
+
+		// Read controller input states
+		controllerProxy.GetState(0, G_RIGHT_TRIGGER_AXIS, rightTriggerState);
+		controllerProxy.GetState(0, G_LEFT_TRIGGER_AXIS, leftTriggerState);
+		controllerProxy.GetState(0, G_LY_AXIS, leftStickYAxisState);
+		controllerProxy.GetState(0, G_LX_AXIS, leftStickXAxisState);
+		controllerProxy.GetState(0, G_RY_AXIS, rightStickYAxisState);
+		controllerProxy.GetState(0, G_RX_AXIS, rightStickXAxisState);
+
+		// Update vertical movements
+		totalYChange = spaceKeyState - leftShiftState + rightTriggerState - leftTriggerState;
+		matrixProxy.TranslateGlobalF(cameraMatrix, GW::MATH::GVECTORF{ 0, totalYChange * cameraSpeed * deltaTime, 0, 1 }, cameraMatrix);
+
+		// TODO: Part 4E 
+		// Update horizontal movements
+		perFrameSpeed = cameraSpeed * deltaTime;
+		totalZChange = wKeyState - sKeyState + leftStickYAxisState;
+		totalXChange = dKeyState - aKeyState + leftStickXAxisState;
+		// A direction vector for the camera's local space
+		GW::MATH::GVECTORF localMoveDirection = { totalXChange, 0.0f, totalZChange, 1.0f };
+		// Transform the direction vector from local space to world space
+		GW::MATH::GVector::TransformF(localMoveDirection, cameraMatrix, localMoveDirection);
+		// Translate the camera in the direction of the transformed vector
+		matrixProxy.TranslateGlobalF(cameraMatrix, GW::MATH::GVECTORF{ localMoveDirection.x * perFrameSpeed, 0.0f, localMoveDirection.z * perFrameSpeed, 1.0f }, cameraMatrix);
+
+		// TODO: Part 4F 
+		// Update pitch movements
+		thumbStickSpeed = G2D_PI * deltaTime;
+		totalPitch = fov * mouseYDelta / screenHeight + rightStickYAxisState * thumbStickSpeed * -1;
+		matrixProxy.RotateXLocalF(cameraMatrix, totalPitch, cameraMatrix);
+
+		// TODO: Part 4G
+		// Update yaw movements
+		totalYaw = fov * screenAspectRatio * mouseXDelta / screenWidth + rightStickXAxisState * thumbStickSpeed;
+		matrixProxy.RotateYGlobalF(cameraMatrix, totalYaw, cameraMatrix);
+
+		// Return the cameraMatrix to view space
+		// then send the new viewMatrix to the GPU
+		matrixProxy.InverseF(cameraMatrix, viewMatrix);
+		sceneData.viewMatrix = viewMatrix;
+
+	}
+
 };
 
 // * NOTE: *
@@ -444,12 +570,12 @@ class Level_Objects {
 	std::list<Model> allObjectsInLevel;
 	// TODO: This could be a good spot for any global data like cameras or lights
 public:
-	
+
 	// Imports the default level txt format and creates a Model from each .h2b
-	bool LoadLevel(	const char* gameLevelPath,
-					const char* h2bFolderPath,
-					GW::SYSTEM::GLog log) {
-		
+	bool LoadLevel(const char* gameLevelPath,
+		const char* h2bFolderPath,
+		GW::SYSTEM::GLog log) {
+
 		// What this does:
 		// Parse GameLevel.txt 
 		// For each model found in the file...
@@ -534,7 +660,7 @@ public:
 	// Draws all objects in the level
 	void RenderLevel(GW::SYSTEM::GWindow win, GW::GRAPHICS::GDirectX11Surface d3d) {
 		// iterate over each model and tell it to draw itself
-		for (auto &e : allObjectsInLevel) {
+		for (auto& e : allObjectsInLevel) {
 			e.DrawModel(win, d3d);
 		}
 	}

@@ -8,10 +8,11 @@
 #define GATEWARE_DISABLE_GOPENGLSURFACE // we have another template for this
 #define GATEWARE_DISABLE_GVULKANSURFACE // we have another template for this
 #define GATEWARE_ENABLE_MATH // enables Gateware's math library
+#define GATEWARE_ENABLE_INPUT // enables Gateware's input library
 // With what we want & what we don't defined we can include the API
 #include "../gateware-main/Gateware.h"
 #include "FileIntoString.h"
-#include "../Assets/FSLogo.h"
+//#include "../Assets/FSLogo.h"
 #include "load_object_oriented.h"
 #include "renderer.h" // example rendering code (not Gateware code!)
 
@@ -40,6 +41,7 @@ int main()
 		if (+d3d11.Create(win, GW::GRAPHICS::DEPTH_BUFFER_SUPPORT))
 		{
 			RenderManager renderer(win, d3d11);
+			Model camera;
 			while (+win.ProcessWindowEvents())
 			{
 				IDXGISwapChain* swap;
@@ -54,6 +56,7 @@ int main()
 					con->ClearRenderTargetView(view, clr);
 					con->ClearDepthStencilView(depth, D3D11_CLEAR_DEPTH, 1, 0);
 					//renderer.Update();
+					camera.UpdateCamera(win, d3d11);
 					renderer.Render();
 					swap->Present(1, 0);
 					// release incremented COM reference counts
