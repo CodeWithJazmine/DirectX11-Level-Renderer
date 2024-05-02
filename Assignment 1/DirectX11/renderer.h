@@ -16,12 +16,17 @@ struct VERTEX
 	float x, y, z, w;
 };
 // TODO: Part 2B 
-struct SHADER_VARS
+struct SceneData
 {
 	GW::MATH::GMATRIXF worldMatrix;
 // TODO: Part 2G 
 	GW::MATH::GMATRIXF viewMatrix;
 	GW::MATH::GMATRIXF projectionMatrix;
+};
+
+struct MeshData
+{
+	H2B::MATERIAL material;
 };
 
 class Renderer
@@ -34,6 +39,7 @@ class Renderer
 	// what we need at a minimum to draw a triangle
 	Microsoft::WRL::ComPtr<ID3D11Buffer>		vertexBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer>		indexBuffer;
+	Microsoft::WRL::ComPtr<ID3D11Buffer>		meshConstantBuffer;
 	Microsoft::WRL::ComPtr<ID3D11VertexShader>	vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader>	pixelShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout>	vertexFormat;
@@ -43,7 +49,8 @@ class Renderer
 	GW::MATH::GMatrix matrixProxy;
 
 	// TODO: Part 2C 
-	SHADER_VARS shaderVars;
+	SceneData sceneData;
+	MeshData meshData;
 
 	// TODO: Part 2D 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBuffer;
@@ -82,7 +89,6 @@ class Renderer
 		prevMouseY;
 
 
-
 public:
 	Renderer(GW::SYSTEM::GWindow _win, GW::GRAPHICS::GDirectX11Surface _d3d, Level_Data& _lvl) : level(_lvl)
 	{
@@ -96,20 +102,22 @@ public:
 
 		// TODO: Part 2C 
 		InitializeWorldMatrix();
-		shaderVars.worldMatrix = worldMatrix;
+		sceneData.worldMatrix = worldMatrix;
 
 		// TODO: Part 2G 
 		InitializeViewMatrix();
-		shaderVars.viewMatrix = viewMatrix;
+		sceneData.viewMatrix = viewMatrix;
 
 		// TODO: Part 3A 
 		InitializeProjectionMatrix();
 		// TODO: Part 3B 
-		shaderVars.projectionMatrix = projectionMatrix;
+		sceneData.projectionMatrix = projectionMatrix;
 
 		// TODO: Part 3C 
 		//InitializeWorldMatricesForCube();
 		
+		InitializeMeshData();
+
 		timePassed = std::chrono::steady_clock::now();
 		inputProxy.GetMousePosition(prevMouseX, prevMouseY);
 		
@@ -126,7 +134,8 @@ private:
 		InitializeVertexBuffer(creator);
 		InitializeIndexBuffer(creator);
 		//TODO: Part 2D 
-		InitializeConstantBuffer(creator, &shaderVars);
+		InitializeConstantBuffer(creator, &sceneData);
+		InitializeMeshConstantBuffer(creator, &meshData);
 		InitializePipeline(creator);
 
 		// free temporary handle
@@ -166,10 +175,17 @@ private:
 	void InitializeConstantBuffer(ID3D11Device* creator, const void* data)
 	{
 		D3D11_SUBRESOURCE_DATA cbData = { data, 0, 0 };
-		CD3D11_BUFFER_DESC cbDesc(sizeof(SHADER_VARS), D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+		CD3D11_BUFFER_DESC cbDesc(sizeof(SceneData), D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 		creator->CreateBuffer(&cbDesc, &cbData, constantBuffer.GetAddressOf());
 	}
 	
+	void InitializeMeshConstantBuffer(ID3D11Device* creator, const void* data)
+	{
+		D3D11_SUBRESOURCE_DATA mcbData = { data, 0, 0 };
+		CD3D11_BUFFER_DESC mcbDesc(sizeof(MeshData), D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+		creator->CreateBuffer(&mcbDesc, &mcbData, meshConstantBuffer.GetAddressOf());
+	}
+
 	void InitializePipeline(ID3D11Device* creator)
 	{
 		UINT compilerFlags = D3DCOMPILE_ENABLE_STRICTNESS;
@@ -247,7 +263,7 @@ private:
 		attributes[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 		attributes[0].InstanceDataStepRate = 0;
 
-		attributes[1].SemanticName = "UVW";
+		attributes[1].SemanticName = "UV";
 		attributes[1].SemanticIndex = 0;
 		attributes[1].Format = DXGI_FORMAT_R32G32B32_FLOAT;
 		attributes[1].InputSlot = 0;
@@ -268,6 +284,10 @@ private:
 			vertexFormat.GetAddressOf());
 	}
 
+	void InitializeMeshData()
+	{
+		meshData.material = level.levelMaterials[0];
+	}
 	void BuildGrid(std::vector<VERTEX>& verts)
 	{
 		float spacing = 1.0f / 25; // Determine spacing between grid lines
@@ -365,6 +385,10 @@ private:
 		matrixProxy.ProjectionDirectXLHF(fov, aspectRatio, nearPlane, farPlane, projectionMatrix);
 	}
 
+	void CreateWorldMatrices()
+	{
+
+	}
 
 public:
 	void Render()
@@ -374,17 +398,33 @@ public:
 		// TODO: Part 1B 
 		// TODO: Part 1D 
 		// TODO: Part 3D 
-		D3D11_MAPPED_SUBRESOURCE mappedSubresource;
+		D3D11_MAPPED_SUBRESOURCE mappedResource;
 
 		// Draw an instance of every object
-		/*for (auto& object : level.blenderObjects)
+		/*for (const auto& object : level.blenderObjects)
 		{
-				curHandles.context->DrawIndexedInstanced(level.levelModels[object.modelIndex].indexCount, 1, level.levelModels[object.modelIndex].indexStart, level.levelModels[object.modelIndex].vertexStart, object.modelIndex);
+			curHandles.context->DrawIndexedInstanced(level.levelModels[object.modelIndex].indexCount, 1, level.levelModels[object.modelIndex].indexStart, level.levelModels[object.modelIndex].vertexStart, object.modelIndex);
 		}*/
 		
+		//// For testing purposes, draw one object
+		//meshData.material.attrib = level.levelMaterials[0].attrib;
 
-		// For testing purposes, draw one object
-		curHandles.context->DrawIndexedInstanced(level.levelModels[0].indexCount, 1, level.levelModels[0].indexStart, level.levelModels[0].vertexStart, 0);
+		//curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		//memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
+		//curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
+
+		//curHandles.context->DrawIndexedInstanced(level.levelModels[0].indexCount, 1, level.levelModels[0].indexStart, level.levelModels[0].vertexStart, 0);
+
+
+		for (const auto& model : level.levelModels)
+		{
+			for (int msh = model.meshStart; msh < model.meshCount + model.materialStart; ++msh)
+			{
+				auto& mesh = level.levelMeshes[msh];
+				curHandles.context->DrawIndexedInstanced(mesh.drawInfo.indexCount, 1, model.indexStart + mesh.drawInfo.indexOffset, model.vertexStart, 0);
+			}
+		}
+
 		ReleasePipelineHandles(curHandles);
 	}
 
@@ -494,7 +534,7 @@ public:
 		// Return the cameraMatrix to view space
 		// then send the new viewMatrix to the GPU
 		matrixProxy.InverseF(cameraMatrix, viewMatrix);
-		shaderVars.viewMatrix = viewMatrix;
+		sceneData.viewMatrix = viewMatrix;
 
 	}
 
@@ -520,6 +560,7 @@ private:
 		SetRenderTargets(handles);
 		SetVertexBuffers(handles);
 		SetIndexBuffers(handles);
+		SetConstantBuffers(handles);
 		SetShaders(handles);
 		//TODO: Part 2E 
 		handles.context->VSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf() );
@@ -552,6 +593,15 @@ private:
 		handles.context->PSSetShader(pixelShader.Get(), nullptr, 0);
 	}
 
+	void SetConstantBuffers(PipelineHandles handles)
+	{
+		
+		handles.context->VSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
+		handles.context->PSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
+
+		handles.context->VSSetConstantBuffers(1, 1, meshConstantBuffer.GetAddressOf());
+		handles.context->PSSetConstantBuffers(1, 1, meshConstantBuffer.GetAddressOf());
+	}
 	void ReleasePipelineHandles(PipelineHandles toRelease)
 	{
 		toRelease.depthStencil->Release();
