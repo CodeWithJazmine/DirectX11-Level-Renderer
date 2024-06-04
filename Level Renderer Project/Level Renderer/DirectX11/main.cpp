@@ -11,8 +11,8 @@
 // With what we want & what we don't defined we can include the API
 #include "../gateware-main/Gateware.h"
 #include "FileIntoString.h"
+//#include "load_data_oriented.h"
 #include "../Assets/FSLogo.h"
-#include "load_object_oriented.h"
 #include "renderer.h" // example rendering code (not Gateware code!)
 
 // open some namespaces to compact the code a bit
@@ -23,6 +23,10 @@ using namespace GRAPHICS;
 // lets pop a window and use D3D11 to clear to a green screen
 int main()
 {
+	/*Level_Data lvl;
+	GLog log; 
+	log.Create("output.txt");
+	bool status = lvl.LoadLevel("../GameLevel.txt", "../Models", log);*/
 
 	GWindow win;
 	GEventResponder msgs;
@@ -40,7 +44,7 @@ int main()
 		win.Register(msgs);
 		if (+d3d11.Create(win, GW::GRAPHICS::DEPTH_BUFFER_SUPPORT))
 		{
-			Renderer renderer(win, d3d11);
+			Renderer renderer(win, d3d11, /*lvl*/);
 			while (+win.ProcessWindowEvents())
 			{
 				IDXGISwapChain* swap;
