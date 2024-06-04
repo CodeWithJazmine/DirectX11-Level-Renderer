@@ -7,45 +7,19 @@
 // TODO: Part 2D 
 // TODO: Part 4A 
 // TODO: Part 4B
-
-//struct OBJ_ATTRIBUTES
-//{
-//    float3 Kd; // diffuse reflectivity
-//    float d; // dissolve (transparency) 
-//    float3 Ks; // specular reflectivity
-//    float Ns; // specular exponent
-//    float3 Ka; // ambient reflectivity
-//    float sharpness; // local reflection map sharpness
-//    float3 Tf; // transmission filter
-//    float Ni; // optical density (index of refraction)
-//    float3 Ke; // emissive reflectivity
-//    uint illum; // illumination model
-//};
-namespace H2B
+struct OBJ_ATTRIBUTES
 {
-#pragma pack(push,1)
-struct VECTOR
-{
-    float x, y, z;
+    float3 Kd; // diffuse reflectivity
+    float d; // dissolve (transparency) 
+    float3 Ks; // specular reflectivity
+    float Ns; // specular exponent
+    float3 Ka; // ambient reflectivity
+    float sharpness; // local reflection map sharpness
+    float3 Tf; // transmission filter
+    float Ni; // optical density (index of refraction)
+    float3 Ke; // emissive reflectivity
+    uint illum; // illumination model
 };
-struct VERTEX
-{
-    VECTOR pos, uvw, nrm;
-};
-struct ATTRIBUTES
-{
-    VECTOR Kd;
-    float d;
-    VECTOR Ks;
-    float Ns;
-    VECTOR Ka;
-    float sharpness;
-    VECTOR Tf;
-    float Ni;
-    VECTOR Ke;
-    uint illum;
-};
-}
 
 cbuffer SceneData : register(b0)
 {
@@ -60,8 +34,9 @@ cbuffer SceneData : register(b0)
 cbuffer MeshData : register(b1)
 {
     float4x4 worldMatrix;
-    H2B::ATTRIBUTES material;
+    OBJ_ATTRIBUTES material;
 };
+
 struct OutputToRasterizer
 {
     float4 posH : SV_POSITION; // position in homogenous projection space
