@@ -19,8 +19,6 @@ set(SOURCE_CODE
 	main.cpp
 	renderer.h
 	FileIntoString.h
-	h2bParser.h
-	load_data_oriented.h
 	#TODO: Part 1B (optional)
 )
 

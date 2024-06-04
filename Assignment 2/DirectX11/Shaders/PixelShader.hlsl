@@ -45,7 +45,7 @@ float4 main(float4 posH : SV_POSITION, float3 posW : WORLD, float3 normW : NORMA
     float3 result = lightRatio * sunColor.xyz * material.Kd;
     
     // calculate specular reflection
-    float3 viewDir = normalize(mul(cameraPos.xyz, posW) - posW);
+    float3 viewDir = normalize(mul(cameraPos.xyz, posW) - posH.xyz);
     float3 halfVector = normalize((-sunDirection.xyz) + viewDir);
     float intensity = dot(normalize(normW), halfVector);
     intensity = clamp(intensity, 0, 1);
