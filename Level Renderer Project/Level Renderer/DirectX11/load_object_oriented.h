@@ -126,24 +126,20 @@ public:
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
 
 		// update material
-		//meshData.worldMatrix = world;
-		//meshData.material = cpuModel.materials[0].attrib;
+		meshData.worldMatrix = world;
+		meshData.material = cpuModel.materials[0].attrib;
 
-		//// send updated mesh buffer to pixel shader
-		//curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		//memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
-		//curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
+		// send updated mesh buffer to pixel shader
+		curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
+		curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
 
-		//curHandles.context->DrawIndexed(cpuModel.meshes[0].drawInfo.indexCount, cpuModel.meshes[0].drawInfo.indexOffset, 0);
+		curHandles.context->DrawIndexed(cpuModel.meshes[0].drawInfo.indexCount, cpuModel.meshes[0].drawInfo.indexOffset, 0);
 		// draw the mesh
-		for (auto& m : cpuModel.meshes)
+		/*for (auto& m : cpuModel.meshes)
 		{
-			meshData.material = cpuModel.materials[m.materialIndex].attrib;
-			curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-			memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
-			curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
 			curHandles.context->DrawIndexed(m.drawInfo.indexCount, m.drawInfo.indexOffset, 0);
-		}
+		}*/
 
 		ReleasePipelineHandles(curHandles);
 
@@ -259,7 +255,8 @@ private:
 
 	void InitializeMeshData()
 	{
-		meshData.worldMatrix = worldMatrix;
+		SetWorldMatrix(worldMatrix);
+		meshData.worldMatrix = world;
 		//meshData.material = FSLogo_materials[0].attrib;
 		meshData.material = cpuModel.materials[0].attrib;
 	}
