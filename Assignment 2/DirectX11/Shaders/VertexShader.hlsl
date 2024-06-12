@@ -63,5 +63,6 @@ OutputToRasterizer main(VERTEX_IN inputVertex)
     output.posW = mul(inputVertex.position, (float3x3) worldMatrix);
     output.normW = mul(inputVertex.normal, (float3x3) worldMatrix);
     
+    
     return output;
 }

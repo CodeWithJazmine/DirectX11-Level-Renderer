@@ -109,9 +109,9 @@ private:
 	
 	void CreateVertexBuffer(ID3D11Device* creator, const void* data, unsigned int sizeInBytes)
 	{
-		D3D11_SUBRESOURCE_DATA bData = { data, 0, 0 };
-		CD3D11_BUFFER_DESC bDesc(sizeInBytes, D3D11_BIND_VERTEX_BUFFER);
-		creator->CreateBuffer(&bDesc, &bData, vertexBuffer.GetAddressOf());
+		D3D11_SUBRESOURCE_DATA vbData = { data, 0, 0 };
+		CD3D11_BUFFER_DESC vbDesc(sizeInBytes, D3D11_BIND_VERTEX_BUFFER);
+		creator->CreateBuffer(&vbDesc, &vbData, vertexBuffer.GetAddressOf());
 	}
 	void InitializeIndexBuffer(ID3D11Device* creator)
 	{
@@ -120,23 +120,23 @@ private:
 
 	void CreateIndexBuffer(ID3D11Device* creator, const void* data, unsigned int sizeInBytes)
 	{
-		D3D11_SUBRESOURCE_DATA bData = { data, 0, 0 };
-		CD3D11_BUFFER_DESC bDesc(sizeInBytes, D3D11_BIND_INDEX_BUFFER);
-		creator->CreateBuffer(&bDesc, &bData, indexBuffer.GetAddressOf());
+		D3D11_SUBRESOURCE_DATA ibData = { data, 0, 0 };
+		CD3D11_BUFFER_DESC ibDesc(sizeInBytes, D3D11_BIND_INDEX_BUFFER);
+		creator->CreateBuffer(&ibDesc, &ibData, indexBuffer.GetAddressOf());
 	}
 
 	void InitializeSceneConstantBuffer(ID3D11Device* creator, const void* data)
 	{
-		D3D11_SUBRESOURCE_DATA cbData = { data, 0, 0 };
-		CD3D11_BUFFER_DESC cbDesc(sizeof(SceneData), D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
-		creator->CreateBuffer(&cbDesc, &cbData, sceneConstantBuffer.GetAddressOf());
+		D3D11_SUBRESOURCE_DATA scbData = { data, 0, 0 };
+		CD3D11_BUFFER_DESC scbDesc(sizeof(SceneData), D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+		creator->CreateBuffer(&scbDesc, &scbData, sceneConstantBuffer.GetAddressOf());
 	}
 
 	void InitializeMeshConstantBuffer(ID3D11Device* creator, const void* data)
 	{
-		D3D11_SUBRESOURCE_DATA cbData = { data, 0, 0 };
-		CD3D11_BUFFER_DESC cbDesc(sizeof(MeshData), D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
-		creator->CreateBuffer(&cbDesc, &cbData, meshConstantBuffer.GetAddressOf());
+		D3D11_SUBRESOURCE_DATA mcbData = { data, 0, 0 };
+		CD3D11_BUFFER_DESC mcbDesc(sizeof(MeshData), D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+		creator->CreateBuffer(&mcbDesc, &mcbData, meshConstantBuffer.GetAddressOf());
 	}
 
 	void InitializeMatrices()
@@ -150,7 +150,7 @@ private:
 			GW::MATH::GVECTORF{ 0.75f, 0.25f, -1.5f }, // Camera position
 			GW::MATH::GVECTORF{ 0.15f, 0.75f, 0.0f }, // Look at position
 			GW::MATH::GVECTORF{ 0.0f, 1.0f, 0.0f }, // Up direction
-			viewMatrix ); 
+			viewMatrix ); // 
 
 		// Projection: A vertical field of view of 65 degrees, and a near and far plane of 0.1 and 100 respectively.
 		float aspectRatio;
@@ -177,10 +177,10 @@ private:
 	{
 		sceneData.sunDirection = lightDirection;
 		sceneData.sunColor = lightColor;
-		sceneData.projectionMatrix = projectionMatrix;
 		sceneData.viewMatrix = viewMatrix;
+		sceneData.projectionMatrix = projectionMatrix;
 		sceneData.sunAmbient = sunAmbient;
-		sceneData.cameraPos = viewMatrix.row1;
+		sceneData.cameraPos = GW::MATH::GVECTORF{ 0.75f, 0.25f, -1.5f };
 	}
 
 	void InitializeMeshData()
@@ -407,7 +407,7 @@ public:
 	{
 		static auto start = std::chrono::steady_clock::now();
 		double timePassed = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
-		double rotationSpeed = timePassed * 35.0f;
+		double rotationSpeed = timePassed * 40.0f;
 		matrixProxy.RotateYGlobalF(rotationMatrix, G2D_DEGREE_TO_RADIAN_F(rotationSpeed), rotationMatrix);
 		start = std::chrono::steady_clock::now();
 	}
