@@ -13,7 +13,6 @@
 #include "FileIntoString.h"
 #include "renderer.h" // example rendering code (not Gateware code!)
 #include "../Assets/FSLogo.h"
-//#include "XTime.h"
 
 // open some namespaces to compact the code a bit
 using namespace GW;
@@ -53,6 +52,7 @@ int main()
 				{
 					con->ClearRenderTargetView(view, clr);
 					con->ClearDepthStencilView(depth, D3D11_CLEAR_DEPTH, 1, 0);
+					renderer.Update();
 					renderer.Render();
 					swap->Present(1, 0);
 					// release incremented COM reference counts

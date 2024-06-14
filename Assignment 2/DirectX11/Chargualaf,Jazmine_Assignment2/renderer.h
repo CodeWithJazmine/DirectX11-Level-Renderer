@@ -1,6 +1,5 @@
 #include <d3dcompiler.h>	// required for compiling shaders on the fly, consider pre-compiling instead
 #include "../Assets/FSLogo.h"
-//#include "XTime.h"
 #pragma comment(lib, "d3dcompiler.lib") 
 
 void PrintLabeledDebugString(const char* label, const char* toPrint)
@@ -53,12 +52,12 @@ class Renderer
 	GW::MATH::GVector  vectorProxy;
 	GW::MATH::GVECTORF lightDirection;
 	GW::MATH::GVECTORF lightColor;
+	GW::MATH::GVECTORF sunAmbient;
 
 	// TODO: Part 2B 
 	SceneData sceneData;
 	MeshData meshData;
-
-	//XTime timer;
+	
 
 public:
 	Renderer(GW::SYSTEM::GWindow _win, GW::GRAPHICS::GDirectX11Surface _d3d)
@@ -110,9 +109,9 @@ private:
 	
 	void CreateVertexBuffer(ID3D11Device* creator, const void* data, unsigned int sizeInBytes)
 	{
-		D3D11_SUBRESOURCE_DATA bData = { data, 0, 0 };
-		CD3D11_BUFFER_DESC bDesc(sizeInBytes, D3D11_BIND_VERTEX_BUFFER);
-		creator->CreateBuffer(&bDesc, &bData, vertexBuffer.GetAddressOf());
+		D3D11_SUBRESOURCE_DATA vbData = { data, 0, 0 };
+		CD3D11_BUFFER_DESC vbDesc(sizeInBytes, D3D11_BIND_VERTEX_BUFFER);
+		creator->CreateBuffer(&vbDesc, &vbData, vertexBuffer.GetAddressOf());
 	}
 	void InitializeIndexBuffer(ID3D11Device* creator)
 	{
@@ -121,38 +120,37 @@ private:
 
 	void CreateIndexBuffer(ID3D11Device* creator, const void* data, unsigned int sizeInBytes)
 	{
-		D3D11_SUBRESOURCE_DATA bData = { data, 0, 0 };
-		CD3D11_BUFFER_DESC bDesc(sizeInBytes, D3D11_BIND_INDEX_BUFFER);
-		creator->CreateBuffer(&bDesc, &bData, indexBuffer.GetAddressOf());
+		D3D11_SUBRESOURCE_DATA ibData = { data, 0, 0 };
+		CD3D11_BUFFER_DESC ibDesc(sizeInBytes, D3D11_BIND_INDEX_BUFFER);
+		creator->CreateBuffer(&ibDesc, &ibData, indexBuffer.GetAddressOf());
 	}
 
 	void InitializeSceneConstantBuffer(ID3D11Device* creator, const void* data)
 	{
-		D3D11_SUBRESOURCE_DATA cbData = { data, 0, 0 };
-		CD3D11_BUFFER_DESC cbDesc(sizeof(SceneData), D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
-		creator->CreateBuffer(&cbDesc, &cbData, sceneConstantBuffer.GetAddressOf());
+		D3D11_SUBRESOURCE_DATA scbData = { data, 0, 0 };
+		CD3D11_BUFFER_DESC scbDesc(sizeof(SceneData), D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+		creator->CreateBuffer(&scbDesc, &scbData, sceneConstantBuffer.GetAddressOf());
 	}
 
 	void InitializeMeshConstantBuffer(ID3D11Device* creator, const void* data)
 	{
-		D3D11_SUBRESOURCE_DATA cbData = { data, 0, 0 };
-		CD3D11_BUFFER_DESC cbDesc(sizeof(MeshData), D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
-		creator->CreateBuffer(&cbDesc, &cbData, meshConstantBuffer.GetAddressOf());
+		D3D11_SUBRESOURCE_DATA mcbData = { data, 0, 0 };
+		CD3D11_BUFFER_DESC mcbDesc(sizeof(MeshData), D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+		creator->CreateBuffer(&mcbDesc, &mcbData, meshConstantBuffer.GetAddressOf());
 	}
 
 	void InitializeMatrices()
 	{
 		// World Matrix: An identity matrix that slowly rotates along the Y axis over time.
 		matrixProxy.IdentityF(worldMatrix);
-
-		//Rotate Y axis over time
+		matrixProxy.IdentityF(rotationMatrix);
 
 		// View: A camera positioned at 0.75x +0.25y -1.5z that is rotated to look at +0.15x +0.75y +0z.
 		matrixProxy.LookAtLHF(
 			GW::MATH::GVECTORF{ 0.75f, 0.25f, -1.5f }, // Camera position
 			GW::MATH::GVECTORF{ 0.15f, 0.75f, 0.0f }, // Look at position
 			GW::MATH::GVECTORF{ 0.0f, 1.0f, 0.0f }, // Up direction
-			viewMatrix ); 
+			viewMatrix ); // 
 
 		// Projection: A vertical field of view of 65 degrees, and a near and far plane of 0.1 and 100 respectively.
 		float aspectRatio;
@@ -169,17 +167,20 @@ private:
 	{
 		// Light Direction:  Forward with a strong tilt down and to the left. -1x -1y +2z (normalize)
 		vectorProxy.NormalizeF(GW::MATH::GVECTORF{ -1.0f, -1.0f, 2.0f }, lightDirection);
-
 		// Light Color: Almost white with a slight blueish tinge. 0.9r 0.9g 1.0b 1.0a
 		lightColor = GW::MATH::GVECTORF{ 0.9f, 0.9f, 1.0f, 1.0f };
+		// Sun Ambient: 25% red, 25% green, and 35% blue
+		sunAmbient = GW::MATH::GVECTORF{ 0.25f, 0.25f, 0.35f };
 	}
 
 	void InitializeSceneData()
 	{
 		sceneData.sunDirection = lightDirection;
 		sceneData.sunColor = lightColor;
-		sceneData.projectionMatrix = projectionMatrix;
 		sceneData.viewMatrix = viewMatrix;
+		sceneData.projectionMatrix = projectionMatrix;
+		sceneData.sunAmbient = sunAmbient;
+		sceneData.cameraPos = GW::MATH::GVECTORF{ 0.75f, 0.25f, -1.5f };
 	}
 
 	void InitializeMeshData()
@@ -297,20 +298,16 @@ public:
 		// TODO: Part 3C 
 		// TODO: Part 4D
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
-
-
-		curHandles.context->Map(sceneConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		memcpy(mappedResource.pData, &sceneData, sizeof(SceneData));
-		curHandles.context->Unmap(sceneConstantBuffer.Get(), 0);
 	
 		// Loop through each mesh to draw separately
 		for (int i = 0; i < 2; i++) {
 			
-			// update world matrix for logo rotation
-			/*if (i == 1)
-			{
+			// update world matrix for rotation
+			if (i == 0) // text
+				meshData.worldMatrix = worldMatrix;
+			else if (i == 1) // logo
 				meshData.worldMatrix = rotationMatrix;
-			}*/
+
 			// update material
 			meshData.material = FSLogo_materials[i].attrib;
 
@@ -325,6 +322,8 @@ public:
 
 		ReleasePipelineHandles(curHandles);
 	}
+
+	
 
 private:
 	struct PipelineHandles
@@ -402,5 +401,14 @@ public:
 	~Renderer()
 	{
 		// ComPtr will auto release so nothing to do here yet 
+	}
+
+	void Update()
+	{
+		static auto start = std::chrono::steady_clock::now();
+		double timePassed = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+		double rotationSpeed = timePassed * 40.0f;
+		matrixProxy.RotateYGlobalF(rotationMatrix, G2D_DEGREE_TO_RADIAN_F(rotationSpeed), rotationMatrix);
+		start = std::chrono::steady_clock::now();
 	}
 };
