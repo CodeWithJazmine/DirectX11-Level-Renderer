@@ -13,6 +13,7 @@
 #include "FileIntoString.h"
 #include "renderer.h" // example rendering code (not Gateware code!)
 #include "../Assets/FSLogo.h"
+#include "load_object_oriented.h"
 
 // open some namespaces to compact the code a bit
 using namespace GW;
