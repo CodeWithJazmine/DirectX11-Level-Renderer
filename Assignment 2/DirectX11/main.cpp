@@ -13,7 +13,7 @@
 #include "FileIntoString.h"
 #include "renderer.h" // example rendering code (not Gateware code!)
 #include "../Assets/FSLogo.h"
-#include "load_object_oriented.h"
+//#include "load_object_oriented.h"
 
 // open some namespaces to compact the code a bit
 using namespace GW;
@@ -39,7 +39,7 @@ int main()
 		win.Register(msgs);
 		if (+d3d11.Create(win, GW::GRAPHICS::DEPTH_BUFFER_SUPPORT))
 		{
-			Renderer renderer(win, d3d11);
+			RendererManager renderer(win, d3d11);
 			while (+win.ProcessWindowEvents())
 			{
 				IDXGISwapChain* swap;
@@ -53,7 +53,7 @@ int main()
 				{
 					con->ClearRenderTargetView(view, clr);
 					con->ClearDepthStencilView(depth, D3D11_CLEAR_DEPTH, 1, 0);
-					renderer.Update();
+					//renderer.Update();
 					renderer.Render();
 					swap->Present(1, 0);
 					// release incremented COM reference counts

@@ -46,6 +46,7 @@ namespace H2B {
 	class Parser
 	{
 		std::set<std::string> file_strings;
+
 	public:
 		char version[4];
 		unsigned vertexCount;
