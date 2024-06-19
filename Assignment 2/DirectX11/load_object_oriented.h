@@ -366,55 +366,58 @@ private:
 		handles.context->VSSetConstantBuffers(1, 1, meshConstantBuffer.GetAddressOf());
 		handles.context->PSSetConstantBuffers(1, 1, meshConstantBuffer.GetAddressOf());
 	}
-	void ReleasePipelineHandles(PipelineHandles toRelease)
+	/*void ReleasePipelineHandles(PipelineHandles toRelease)
 	{
 		toRelease.depthStencil->Release();
 		toRelease.targetView->Release();
 		toRelease.context->Release();
-	}
+	}*/
 
 public:
 	bool DrawModel(GW::SYSTEM::GWindow win ,GW::GRAPHICS::GDirectX11Surface d3d) {
 		// TODO: Use chosen API to setup the pipeline for this model and draw it
 
-		//	PipelineHandles curHandles = GetCurrentPipelineHandles(d3d);
-		//	SetUpPipeline(curHandles);
-		//	// TODO: Part 1H 
-		//	// TODO: Part 3B 
-		//	// TODO: Part 3C 
-		//	// TODO: Part 4D
-		//	D3D11_MAPPED_SUBRESOURCE mappedResource;
+			//PipelineHandles curHandles = GetCurrentPipelineHandles(d3d);
+			//SetUpPipeline(curHandles);
+			//// TODO: Part 1H 
+			//// TODO: Part 3B 
+			//// TODO: Part 3C 
+			//// TODO: Part 4D
+			//D3D11_MAPPED_SUBRESOURCE mappedResource;
 
-		//	// Loop through each mesh to draw separately
-		//	for (int i = 0; i < 2; i++) {
+			//// Loop through each mesh to draw separately
+			//for (int i = 0; i < 2; i++) {
 
-		//		// update world matrix for rotation
-		//		if (i == 0) // text
-		//			meshData.worldMatrix = worldMatrix;
-		//		else if (i == 1) // logo
-		//			meshData.worldMatrix = rotationMatrix;
+			//	// update world matrix for rotation
+			//	if (i == 0) // text
+			//		meshData.worldMatrix = worldMatrix;
+			//	else if (i == 1) // logo
+			//		meshData.worldMatrix = rotationMatrix;
 
-		//		// update material
-		//		meshData.material = FSLogo_materials[i].attrib;
+			//	// update material
+			//	meshData.material = FSLogo_materials[i].attrib;
 
-		//		// send updated mesh buffer to pixel shader
-		//		curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		//		memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
-		//		curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
+			//	// send updated mesh buffer to pixel shader
+			//	curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+			//	memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
+			//	curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
 
-		//		// draw the mesh
-		//		curHandles.context->DrawIndexed(FSLogo_meshes[i].indexCount, FSLogo_meshes[i].indexOffset, 0);
+			//	// draw the mesh
+			//	curHandles.context->DrawIndexed(FSLogo_meshes[i].indexCount, FSLogo_meshes[i].indexOffset, 0);
 
-		//	ReleasePipelineHandles(curHandles);
-		//		
-		//}
+			//	FreeResources(curHandles);
+			//	
+			//}
 
 			return true;
 	}
 
-	bool FreeResources(/*specific API device for unloading*/PipelineHandles toRelease) {
+	bool FreeResources(PipelineHandles toRelease) {
 		// TODO: Use chosen API to free all GPU resources used by this model
-
+		toRelease.depthStencil->Release();
+		toRelease.targetView->Release();
+		toRelease.context->Release();
+		return true;
 	}
 
 	void Update()

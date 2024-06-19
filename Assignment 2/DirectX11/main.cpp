@@ -39,7 +39,7 @@ int main()
 		win.Register(msgs);
 		if (+d3d11.Create(win, GW::GRAPHICS::DEPTH_BUFFER_SUPPORT))
 		{
-			RendererManager renderer(win, d3d11);
+			RenderManager renderer(win, d3d11);
 			while (+win.ProcessWindowEvents())
 			{
 				IDXGISwapChain* swap;
