@@ -27,7 +27,7 @@ struct SceneData
 struct MeshData
 {
 	GW::MATH::GMATRIXF worldMatrix; // world space transformation
-	OBJ_ATTRIBUTES material; // material info (color, reflectivity, emissiveness, etc)
+	H2B::ATTRIBUTES material; // material info (color, reflectivity, emissiveness, etc)
 };
 
 // class Model contains everyhting needed to draw a single 3D model
@@ -95,6 +95,8 @@ public:
 
 		// TODO: Part 4E 
 		IntializeGraphics(d3d);
+
+		return false;
 	}
 
 private:
@@ -121,7 +123,7 @@ private:
 	void InitializeVertexBuffer(ID3D11Device * creator)
 	{
 		// TODO: Part 1C 
-		CreateVertexBuffer(creator, &FSLogo_vertices[0], sizeof(OBJ_VERT) * FSLogo_vertexcount);
+		CreateVertexBuffer(creator, &cpuModel.vertices[0], sizeof(H2B::VERTEX) * cpuModel.vertices.size());
 	}
 
 	void CreateVertexBuffer(ID3D11Device * creator, const void* data, unsigned int sizeInBytes)
@@ -130,9 +132,10 @@ private:
 		CD3D11_BUFFER_DESC vbDesc(sizeInBytes, D3D11_BIND_VERTEX_BUFFER);
 		creator->CreateBuffer(&vbDesc, &vbData, vertexBuffer.GetAddressOf());
 	}
+
 	void InitializeIndexBuffer(ID3D11Device * creator)
 	{
-		CreateIndexBuffer(creator, &FSLogo_indices[0], sizeof(UINT) * FSLogo_indexcount);
+		CreateIndexBuffer(creator, &cpuModel.indices[0], sizeof(UINT) * cpuModel.indices.size());
 	}
 
 	void CreateIndexBuffer(ID3D11Device * creator, const void* data, unsigned int sizeInBytes)
@@ -203,7 +206,7 @@ private:
 	void InitializeMeshData()
 	{
 		meshData.worldMatrix = worldMatrix;
-		meshData.material = FSLogo_materials[0].attrib;
+		meshData.material = cpuModel.materials[0].attrib;
 	}
 
 	void InitializePipeline(ID3D11Device * creator)
@@ -340,7 +343,7 @@ private:
 
 	void SetVertexBuffers(PipelineHandles handles)
 	{
-		const UINT strides[] = { sizeof(OBJ_VERT) }; // TODO: Part 1E 
+		const UINT strides[] = { sizeof(H2B::VERTEX) }; // TODO: Part 1E 
 		const UINT offsets[] = { 0 };
 		ID3D11Buffer* const buffs[] = { vertexBuffer.Get() };
 		handles.context->IASetVertexBuffers(0, ARRAYSIZE(buffs), buffs, strides, offsets);
@@ -366,59 +369,64 @@ private:
 		handles.context->VSSetConstantBuffers(1, 1, meshConstantBuffer.GetAddressOf());
 		handles.context->PSSetConstantBuffers(1, 1, meshConstantBuffer.GetAddressOf());
 	}
-	/*void ReleasePipelineHandles(PipelineHandles toRelease)
+	void ReleasePipelineHandles(PipelineHandles toRelease)
 	{
 		toRelease.depthStencil->Release();
 		toRelease.targetView->Release();
 		toRelease.context->Release();
-	}*/
+	}
 
 public:
 	bool DrawModel(GW::SYSTEM::GWindow win ,GW::GRAPHICS::GDirectX11Surface d3d) {
 		// TODO: Use chosen API to setup the pipeline for this model and draw it
 
-			//PipelineHandles curHandles = GetCurrentPipelineHandles(d3d);
-			//SetUpPipeline(curHandles);
-			//// TODO: Part 1H 
-			//// TODO: Part 3B 
-			//// TODO: Part 3C 
-			//// TODO: Part 4D
-			//D3D11_MAPPED_SUBRESOURCE mappedResource;
+			PipelineHandles curHandles = GetCurrentPipelineHandles(d3d);
+			SetUpPipeline(curHandles);
+			// TODO: Part 1H 
+			// TODO: Part 3B 
+			// TODO: Part 3C 
+			// TODO: Part 4D
+			D3D11_MAPPED_SUBRESOURCE mappedResource;
 
-			//// Loop through each mesh to draw separately
-			//for (int i = 0; i < 2; i++) {
+				//// update world matrix for rotation
+				//if (i == 0) // text
+				//	meshData.worldMatrix = worldMatrix;
+				//else if (i == 1) // logo
+				//meshData.worldMatrix = rotationMatrix;
 
-			//	// update world matrix for rotation
-			//	if (i == 0) // text
-			//		meshData.worldMatrix = worldMatrix;
-			//	else if (i == 1) // logo
-			//		meshData.worldMatrix = rotationMatrix;
+				// update material
+				//meshData.material = FSLogo_materials[0].attrib;
 
-			//	// update material
-			//	meshData.material = FSLogo_materials[i].attrib;
+				// send updated mesh buffer to pixel shader
+				curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+				memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
+				curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
 
-			//	// send updated mesh buffer to pixel shader
-			//	curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-			//	memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
-			//	curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
+				// draw the mesh
+				//curHandles.context->DrawIndexed(FSLogo_meshes[0].indexCount, FSLogo_meshes[0].indexOffset, 0);
 
-			//	// draw the mesh
-			//	curHandles.context->DrawIndexed(FSLogo_meshes[i].indexCount, FSLogo_meshes[i].indexOffset, 0);
 
-			//	FreeResources(curHandles);
-			//	
-			//}
+				for (auto& m : cpuModel.meshes)
+				{
+					meshData.material = cpuModel.materials[m.materialIndex].attrib;
+					curHandles.context->DrawIndexed(m.drawInfo.indexCount, m.drawInfo.indexOffset, 0);
+				}
 
-			return true;
+				ReleasePipelineHandles(curHandles);
+				//FreeResources(curHandles);
+				
+
+			return false;
 	}
 
 	bool FreeResources(PipelineHandles toRelease) {
 		// TODO: Use chosen API to free all GPU resources used by this model
-		toRelease.depthStencil->Release();
+		/*toRelease.depthStencil->Release();
 		toRelease.targetView->Release();
-		toRelease.context->Release();
-		return true;
+		toRelease.context->Release();*/
+		return false;
 	}
+
 
 	void Update()
 	{
@@ -537,9 +545,11 @@ public:
 	// Draws all objects in the level
 	void RenderLevel(GW::SYSTEM::GWindow win, GW::GRAPHICS::GDirectX11Surface d3d) {
 		// iterate over each model and tell it to draw itself
-		for (auto &e : allObjectsInLevel) {
+		/*for (auto &e : allObjectsInLevel) {
 			e.DrawModel(win, d3d);
-		}
+		}*/
+
+		allObjectsInLevel.front().DrawModel(win, d3d);
 	}
 	// used to wipe CPU & GPU level data between levels
 	void UnloadLevel() {
@@ -549,5 +559,6 @@ public:
 	// *WITH THIS APPROACH THE CURRENT RENDERER SHOULD BE JUST AN API MANAGER CLASS*
 	// *ALL ACTUAL GPU LOADING AND RENDERING SHOULD BE HANDLED BY THE MODEL CLASS* 
 	// For example: anything that is not a global API object should be encapsulated.
+
 };
 

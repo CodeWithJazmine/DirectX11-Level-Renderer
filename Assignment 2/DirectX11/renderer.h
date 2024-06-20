@@ -11,6 +11,7 @@ class RenderManager
 	// proxy handles
 	GW::SYSTEM::GWindow win;
 	GW::GRAPHICS::GDirectX11Surface d3d;
+	Level_Objects level;
 
 public:
 	RenderManager(GW::SYSTEM::GWindow _win, GW::GRAPHICS::GDirectX11Surface _d3d)
@@ -22,18 +23,13 @@ public:
 		log.Create("../Level Renderer/LevelLoaderLog.txt");
 		log.EnableConsoleLogging(true);
 
-		log.Log("Start Program.");
-
-		Level_Objects objectOrientedLoader;
-		objectOrientedLoader.LoadLevel("../Level Renderer/GameLevel.txt", "../Level Renderer/Models", log);
+		bool status = level.LoadLevel("../Level Renderer/GameLevel.txt", "../Level Renderer/Models", log.Relinquish());
 		
-		log.Log("End Program.");
-		
-		objectOrientedLoader.RenderLevel(_win, _d3d);
+		level.UploadLevelToGPU(_win, _d3d);
 	}
 	void Render()
 	{
-
+		level.RenderLevel(win, d3d);
 	}
 	~RenderManager()
 	{
