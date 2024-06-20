@@ -14,12 +14,10 @@ void PrintLabeledDebugString(const char* label, const char* toPrint)
 #endif
 }
 
-// TODO: Part 2B 
 struct SceneData
 {
 	GW::MATH::GVECTORF sunDirection, sunColor; // lighting info
 	GW::MATH::GMATRIXF viewMatrix, projectionMatrix;
-	// TODO: Part 4E 
 	GW::MATH::GVECTORF sunAmbient, cameraPos;
 
 };
@@ -37,13 +35,7 @@ class Model {
 	// Loads and stores CPU model data from .h2b file
 	H2B::Parser cpuModel; // reads the .h2b format
 	// Shader variables needed by this model. 
-	GW::MATH::GMATRIXF world;// TODO: Add matrix/light/etc vars..
-	// TODO: API Rendering vars here (unique to this model)
-	// Vertex Buffer
-	// Index Buffer
-	// Pipeline/State Objects
-	// Uniform/ShaderVariable Buffer
-	// Vertex/Pixel Shaders
+	GW::MATH::GMATRIXF world;
 
 	// what we need at a minimum to draw a triangle
 	Microsoft::WRL::ComPtr<ID3D11Buffer>		vertexBuffer;
@@ -107,10 +99,9 @@ private:
 		d3d.GetDevice((void**)&creator);
 
 		InitializeVertexBuffer(creator);
-		// TODO: Part 1G 
+
 		InitializeIndexBuffer(creator);
 
-		// TODO: Part 2C 
 		InitializeSceneConstantBuffer(creator, &sceneData);
 		InitializeMeshConstantBuffer(creator, &meshData);
 
@@ -122,7 +113,6 @@ private:
 
 	void InitializeVertexBuffer(ID3D11Device * creator)
 	{
-		// TODO: Part 1C 
 		CreateVertexBuffer(creator, &cpuModel.vertices[0], sizeof(H2B::VERTEX) * cpuModel.vertices.size());
 	}
 
@@ -205,7 +195,8 @@ private:
 
 	void InitializeMeshData()
 	{
-		meshData.worldMatrix = worldMatrix;
+		//meshData.worldMatrix = world;
+		meshData.worldMatrix = worldMatrix; 
 		meshData.material = cpuModel.materials[0].attrib;
 	}
 
@@ -275,7 +266,6 @@ private:
 
 	void CreateVertexInputLayout(ID3D11Device * creator, Microsoft::WRL::ComPtr<ID3DBlob>&vsBlob)
 	{
-		// TODO: Part 1E 
 		D3D11_INPUT_ELEMENT_DESC attributes[3];
 
 		attributes[0].SemanticName = "POSITION";
@@ -343,7 +333,7 @@ private:
 
 	void SetVertexBuffers(PipelineHandles handles)
 	{
-		const UINT strides[] = { sizeof(H2B::VERTEX) }; // TODO: Part 1E 
+		const UINT strides[] = { sizeof(H2B::VERTEX) }; 
 		const UINT offsets[] = { 0 };
 		ID3D11Buffer* const buffs[] = { vertexBuffer.Get() };
 		handles.context->IASetVertexBuffers(0, ARRAYSIZE(buffs), buffs, strides, offsets);
@@ -382,48 +372,23 @@ public:
 
 			PipelineHandles curHandles = GetCurrentPipelineHandles(d3d);
 			SetUpPipeline(curHandles);
-			// TODO: Part 1H 
-			// TODO: Part 3B 
-			// TODO: Part 3C 
-			// TODO: Part 4D
 			D3D11_MAPPED_SUBRESOURCE mappedResource;
 
-				//// update world matrix for rotation
-				//if (i == 0) // text
-				//	meshData.worldMatrix = worldMatrix;
-				//else if (i == 1) // logo
-				//meshData.worldMatrix = rotationMatrix;
 
-				// update material
-				//meshData.material = FSLogo_materials[0].attrib;
+			for (auto& m : cpuModel.meshes)
+			{
+				meshData.material = cpuModel.materials[m.materialIndex].attrib;
+				curHandles.context->DrawIndexed(m.drawInfo.indexCount, m.drawInfo.indexOffset, 0);
+			}
 
-				// send updated mesh buffer to pixel shader
-				curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-				memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
-				curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
-
-				// draw the mesh
-				//curHandles.context->DrawIndexed(FSLogo_meshes[0].indexCount, FSLogo_meshes[0].indexOffset, 0);
-
-
-				for (auto& m : cpuModel.meshes)
-				{
-					meshData.material = cpuModel.materials[m.materialIndex].attrib;
-					curHandles.context->DrawIndexed(m.drawInfo.indexCount, m.drawInfo.indexOffset, 0);
-				}
-
-				ReleasePipelineHandles(curHandles);
-				//FreeResources(curHandles);
+			ReleasePipelineHandles(curHandles);
 				
-
 			return false;
 	}
 
 	bool FreeResources(PipelineHandles toRelease) {
 		// TODO: Use chosen API to free all GPU resources used by this model
-		/*toRelease.depthStencil->Release();
-		toRelease.targetView->Release();
-		toRelease.context->Release();*/
+
 		return false;
 	}
 
@@ -549,7 +514,14 @@ public:
 			e.DrawModel(win, d3d);
 		}*/
 
-		allObjectsInLevel.front().DrawModel(win, d3d);
+		//allObjectsInLevel.back().DrawModel(win, d3d);
+		//allObjectsInLevel.front().DrawModel(win, d3d);
+
+		auto it = allObjectsInLevel.begin();
+		std::advance(it, 1); // Move the iterator to the second element
+
+		// Draw the second object
+		it->DrawModel(win, d3d);
 	}
 	// used to wipe CPU & GPU level data between levels
 	void UnloadLevel() {

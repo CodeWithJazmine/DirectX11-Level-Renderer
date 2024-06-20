@@ -12,8 +12,6 @@
 #include "../gateware-main/Gateware.h"
 #include "FileIntoString.h"
 #include "renderer.h" // example rendering code (not Gateware code!)
-#include "../Assets/FSLogo.h"
-//#include "load_object_oriented.h"
 
 // open some namespaces to compact the code a bit
 using namespace GW;
@@ -29,7 +27,7 @@ int main()
 	if (+win.Create(0, 0, 800, 600, GWindowStyle::WINDOWEDBORDERED))
 	{
 		// TODO: Part 1A 
-		win.SetWindowName("Jazmine Chargualaf - Assignment 2 - DirextX11");
+		win.SetWindowName("Jazmine Chargualaf - Level Renderer - DirextX11");
 		float clr[] = { 1.0f, 192 / 255.0f, 203 / 255.0f, 1 }; // TODO: Part 1A (optional)
 		msgs.Create([&](const GW::GEvent& e) {
 			GW::SYSTEM::GWindow::Events q;
