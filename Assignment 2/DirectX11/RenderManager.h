@@ -1,8 +1,5 @@
-//#include <d3dcompiler.h>	// required for compiling shaders on the fly, consider pre-compiling instead
+
 #include "load_object_oriented.h"
-//#pragma comment(lib, "d3dcompiler.lib") 
-
-
 
 // Creation, Rendering & Cleanup
 class RenderManager

@@ -17,7 +17,7 @@ set(PIXEL_SHADERS
 set(SOURCE_CODE
 	# Header & CPP files go here
 	main.cpp
-	renderer.h
+	RenderManager.h
 	FileIntoString.h
 	h2bParser.h
 	load_object_oriented.h

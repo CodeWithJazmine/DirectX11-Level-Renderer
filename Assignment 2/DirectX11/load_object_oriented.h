@@ -77,15 +77,12 @@ public:
 		matrixProxy.Create();
 		vectorProxy.Create();
 
-		// TODO: Part 2A 
 		InitializeMatrices(d3d);
 		InitializeLight();
 
-		// TODO: Part 2B 
 		InitializeSceneData();
 		InitializeMeshData();
 
-		// TODO: Part 4E 
 		IntializeGraphics(d3d);
 
 		return false;
@@ -513,9 +510,6 @@ public:
 		/*for (auto &e : allObjectsInLevel) {
 			e.DrawModel(win, d3d);
 		}*/
-
-		//allObjectsInLevel.back().DrawModel(win, d3d);
-		//allObjectsInLevel.front().DrawModel(win, d3d);
 
 		auto it = allObjectsInLevel.begin();
 		std::advance(it, 1); // Move the iterator to the second element
