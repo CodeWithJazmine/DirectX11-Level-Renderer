@@ -41,8 +41,8 @@ cbuffer MeshData : register(b1)
 cbuffer SHADER_VARS : register(b2)
 {
     float4x4 cworldMatrix;
-     float4x4 cviewMatrix;
-     float4x4 cprojectionMatrix;
+    float4x4 cviewMatrix;
+    float4x4 cprojectionMatrix;
 };
 
 struct OutputToRasterizer
@@ -67,7 +67,7 @@ OutputToRasterizer main(VERTEX_IN inputVertex)
     //output.posH = mul(output.posH, worldMatrix);
     //output.posH = mul(output.posH, viewMatrix);
     //output.posH = mul(output.posH, projectionMatrix);
-    output.posH = mul(output.posH, cworldMatrix);
+    output.posH = mul(output.posH, worldMatrix);
     output.posH = mul(output.posH, cviewMatrix);
     output.posH = mul(output.posH, cprojectionMatrix);
     

@@ -192,8 +192,8 @@ private:
 
 	void InitializeMeshData()
 	{
-		//meshData.worldMatrix = world;
-		meshData.worldMatrix = worldMatrix; 
+		meshData.worldMatrix = world;
+		//meshData.worldMatrix = worldMatrix; 
 		meshData.material = cpuModel.materials[0].attrib;
 	}
 
@@ -509,15 +509,15 @@ public:
 	// Draws all objects in the level
 	void RenderLevel(GW::SYSTEM::GWindow win, GW::GRAPHICS::GDirectX11Surface d3d) {
 		// iterate over each model and tell it to draw itself
-		/*for (auto &e : allObjectsInLevel) {
+		for (auto &e : allObjectsInLevel) {
 			e.DrawModel(win, d3d);
-		}*/
+		}
 
-		auto it = allObjectsInLevel.begin();
-		std::advance(it, 1); // Move the iterator to the second element
+		//auto it = allObjectsInLevel.begin();
+		//std::advance(it, 1); // Move the iterator to the second element
 
-		// Draw the second object
-		it->DrawModel(win, d3d);
+		//// Draw the second object
+		//it->DrawModel(win, d3d);
 	}
 	// used to wipe CPU & GPU level data between levels
 	void UnloadLevel() {

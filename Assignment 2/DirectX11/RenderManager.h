@@ -35,6 +35,7 @@ public:
 
 };
 
+// Camera Controls
 struct VERTEX
 {
 	float x, y, z, w;
@@ -400,18 +401,17 @@ public:
 		D3D11_MAPPED_SUBRESOURCE mappedSubresource;
 
 		curHandles.context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource);
-
 		memcpy(mappedSubresource.pData, &shaderVars, sizeof(SHADER_VARS));
 		curHandles.context->Unmap(constantBuffer.Get(), 0);
 
-		for (size_t i = 0; i < worldMatricesForCube.size(); i++)
+		/*for (size_t i = 0; i < worldMatricesForCube.size(); i++)
 		{
 			curHandles.context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource);
 			shaderVars.worldMatrix = worldMatricesForCube[i];
 			memcpy(mappedSubresource.pData, &shaderVars, sizeof(SHADER_VARS));
 			curHandles.context->Unmap(constantBuffer.Get(), 0);
 			curHandles.context->Draw(104, 0);
-		}
+		}*/
 
 		ReleasePipelineHandles(curHandles);
 	}
@@ -438,7 +438,7 @@ public:
 			totalPitch = 0.0f,
 			totalYaw = 0.0f;
 
-		const float cameraSpeed = 0.3f;
+		const float cameraSpeed = 1.0f;
 		float perFrameSpeed = 0.0f;
 		float thumbStickSpeed = 0.0f;
 		float fov = G2D_DEGREE_TO_RADIAN_F(65.0f);

@@ -39,6 +39,12 @@ cbuffer MeshData : register(b1)
     ATTRIBUTES material;
 };
 
+cbuffer SHADER_VARS : register(b2)
+{
+    float4x4 cworldMatrix;
+    float4x4 cviewMatrix;
+    float4x4 cprojectionMatrix;
+};
 
 float4 main(float4 posH : SV_POSITION, float3 posW : WORLD, float3 normW : NORMAL) : SV_TARGET
 {
