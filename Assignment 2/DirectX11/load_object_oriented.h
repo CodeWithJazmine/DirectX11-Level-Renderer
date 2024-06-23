@@ -85,7 +85,7 @@ public:
 
 		IntializeGraphics(d3d);
 
-		return false;
+		return true;
 	}
 
 private:
@@ -355,6 +355,8 @@ private:
 
 		handles.context->VSSetConstantBuffers(1, 1, meshConstantBuffer.GetAddressOf());
 		handles.context->PSSetConstantBuffers(1, 1, meshConstantBuffer.GetAddressOf());
+
+		
 	}
 	void ReleasePipelineHandles(PipelineHandles toRelease)
 	{

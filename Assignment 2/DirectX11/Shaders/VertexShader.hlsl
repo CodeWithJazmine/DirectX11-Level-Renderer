@@ -38,6 +38,13 @@ cbuffer MeshData : register(b1)
     ATTRIBUTES material;
 };
 
+cbuffer SHADER_VARS : register(b2)
+{
+    float4x4 cworldMatrix;
+     float4x4 cviewMatrix;
+     float4x4 cprojectionMatrix;
+};
+
 struct OutputToRasterizer
 {
     float4 posH : SV_POSITION; // position in homogenous projection space
@@ -57,9 +64,12 @@ OutputToRasterizer main(VERTEX_IN inputVertex)
     OutputToRasterizer output;
     
     output.posH = float4(inputVertex.position, 1.0f);
-    output.posH = mul(output.posH, worldMatrix);
-    output.posH = mul(output.posH, viewMatrix);
-    output.posH = mul(output.posH, projectionMatrix);
+    //output.posH = mul(output.posH, worldMatrix);
+    //output.posH = mul(output.posH, viewMatrix);
+    //output.posH = mul(output.posH, projectionMatrix);
+    output.posH = mul(output.posH, cworldMatrix);
+    output.posH = mul(output.posH, cviewMatrix);
+    output.posH = mul(output.posH, cprojectionMatrix);
     
     output.posW = mul(inputVertex.position, (float3x3) worldMatrix);
     output.normW = mul(inputVertex.normal, (float3x3) worldMatrix);
