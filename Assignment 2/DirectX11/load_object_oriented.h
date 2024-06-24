@@ -373,32 +373,60 @@ public:
 			SetUpPipeline(curHandles);
 			D3D11_MAPPED_SUBRESOURCE mappedResource;
 
+			/*curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+			memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
+			curHandles.context->Unmap(meshConstantBuffer.Get(), 0);*/
 
 			for (auto& m : cpuModel.meshes)
 			{
+				curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 				meshData.material = cpuModel.materials[m.materialIndex].attrib;
+				memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
+				curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
 				curHandles.context->DrawIndexed(m.drawInfo.indexCount, m.drawInfo.indexOffset, 0);
 			}
 
 			ReleasePipelineHandles(curHandles);
 				
 			return false;
+
+		//PipelineHandles curHandles = GetCurrentPipelineHandles(d3d);
+		//SetUpPipeline(curHandles);
+
+		//// Set the scene constant buffer for the vertex shader
+		//curHandles.context->VSSetConstantBuffers(0, 1, sceneConstantBuffer.GetAddressOf());
+		//// Set the scene constant buffer for the pixel shader
+		//curHandles.context->PSSetConstantBuffers(0, 1, sceneConstantBuffer.GetAddressOf());
+
+		//for (auto& m : cpuModel.meshes) {
+		//	// Update the material properties in the constant buffer
+		//	meshData.material = cpuModel.materials[m.materialIndex].attrib;
+
+		//	D3D11_MAPPED_SUBRESOURCE mappedResource;
+		//	if (SUCCEEDED(curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource))) {
+		//		MeshData* buffer = reinterpret_cast<MeshData*>(mappedResource.pData);
+		//		*buffer = meshData;
+		//		curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
+		//	}
+
+		//	// Set the mesh constant buffer for the vertex shader
+		//	curHandles.context->VSSetConstantBuffers(1, 1, meshConstantBuffer.GetAddressOf());
+		//	// Set the mesh constant buffer for the pixel shader
+		//	curHandles.context->PSSetConstantBuffers(1, 1, meshConstantBuffer.GetAddressOf());
+
+		//	// Draw the mesh
+		//	curHandles.context->DrawIndexed(m.drawInfo.indexCount, m.drawInfo.indexOffset, 0);
+		//}
+
+		//ReleasePipelineHandles(curHandles);
+
+		//return false;
 	}
 
 	bool FreeResources(PipelineHandles toRelease) {
 		// TODO: Use chosen API to free all GPU resources used by this model
 
 		return false;
-	}
-
-
-	void Update()
-	{
-		static auto start = std::chrono::steady_clock::now();
-		double timePassed = std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
-		double rotationSpeed = timePassed * 40.0f;
-		matrixProxy.RotateYGlobalF(rotationMatrix, G2D_DEGREE_TO_RADIAN_F(rotationSpeed), rotationMatrix);
-		start = std::chrono::steady_clock::now();
 	}
 };
 
