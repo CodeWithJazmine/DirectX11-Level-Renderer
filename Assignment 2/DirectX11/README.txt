@@ -1,3 +1,9 @@
+Jazmine Chargualaf 
+3D Content Creation Project
+Level Renderer
+June 2024
+
+
 Keyboard Controls:
 ------------------
 W  - Move Forward
