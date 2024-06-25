@@ -43,6 +43,7 @@ cbuffer SHADER_VARS : register(b2)
     float4x4 cworldMatrix;
     float4x4 cviewMatrix;
     float4x4 cprojectionMatrix;
+    float4 cameraPosition;
 };
 
 struct OutputToRasterizer
@@ -63,17 +64,27 @@ OutputToRasterizer main(VERTEX_IN inputVertex)
 {
     OutputToRasterizer output;
     
-    output.posH = float4(inputVertex.position, 1.0f);
+    //output.posH = float4(inputVertex.position, 1.0f);
+    ////output.posH = mul(output.posH, worldMatrix);
+    ////output.posH = mul(output.posH, viewMatrix);
+    ////output.posH = mul(output.posH, projectionMatrix);
     //output.posH = mul(output.posH, worldMatrix);
-    //output.posH = mul(output.posH, viewMatrix);
-    //output.posH = mul(output.posH, projectionMatrix);
-    output.posH = mul(output.posH, worldMatrix);
-    output.posH = mul(output.posH, cviewMatrix);
+    //output.posH = mul(output.posH, cviewMatrix);
+    //output.posH = mul(output.posH, cprojectionMatrix);
+    
+    //output.posW = mul(inputVertex.position, (float3x3) worldMatrix);
+    //output.normW = mul(inputVertex.normal, (float3x3) worldMatrix);
+    
+    
+    //return output;
+    
+    float4 worldPos = mul(float4(inputVertex.position, 1.0f), worldMatrix);
+    output.posH = mul(worldPos, cviewMatrix);
     output.posH = mul(output.posH, cprojectionMatrix);
     
-    output.posW = mul(inputVertex.position, (float3x3) worldMatrix);
-    output.normW = mul(inputVertex.normal, (float3x3) worldMatrix);
-    
+    output.posW = worldPos.xyz;
+    output.normW = normalize(mul(inputVertex.normal, (float3x3) worldMatrix));
     
     return output;
+    
 }

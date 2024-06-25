@@ -47,6 +47,7 @@ struct SHADER_VARS
 	// TODO: Part 2G 
 	GW::MATH::GMATRIXF viewMatrix;
 	GW::MATH::GMATRIXF projectionMatrix;
+	GW::MATH::GVECTORF cameraPosition;
 };
 
 class CameraController
@@ -63,6 +64,7 @@ class CameraController
 	// TODO: Part 2A 
 	GW::MATH::GMATRIXF worldMatrix;
 	GW::MATH::GMatrix matrixProxy;
+	GW::MATH::GVector vectorProxy;
 
 	// TODO: Part 2C 
 	SHADER_VARS shaderVars;
@@ -89,11 +91,8 @@ class CameraController
 	GW::INPUT::GController controllerProxy;
 
 	std::chrono::steady_clock::time_point timePassed;
-
+	GW::MATH::GVECTORF translationVector;
 	GW::MATH::GMATRIXF cameraMatrix;
-	GW::MATH::GMATRIXF originalCameraMatrix;
-	GW::MATH::GMATRIXF savedCameraMatrix;
-	GW::MATH::GMATRIXF translationMatrix;
 	GW::MATH::GMATRIXF pitchMatrix;
 	GW::MATH::GMATRIXF yawMatrix;
 
@@ -109,18 +108,19 @@ public:
 		d3d = _d3d;
 		// TODO: Part 2A 
 		matrixProxy.Create();
+		vectorProxy.Create();
 		// TODO: Part 4A 
 		inputProxy.Create(_win);
 		controllerProxy.Create();
 
 		// TODO: Part 2C 
-		InitializeWorldMatrix();
+		//InitializeWorldMatrix();
 		shaderVars.worldMatrix = worldMatrix;
 
 		// TODO: Part 2G 
 		InitializeViewMatrix();
 		shaderVars.viewMatrix = viewMatrix;
-
+		
 		// TODO: Part 3A 
 		InitializeProjectionMatrix();
 		// TODO: Part 3B 
@@ -342,7 +342,7 @@ private:
 	void CreateVertexInputLayout(ID3D11Device* creator, Microsoft::WRL::ComPtr<ID3DBlob>& vsBlob)
 	{
 		// TODO: Part 1C 
-		/*D3D11_INPUT_ELEMENT_DESC attributes[1];
+		D3D11_INPUT_ELEMENT_DESC attributes[1];
 
 		attributes[0].SemanticName = "POSITION";
 		attributes[0].SemanticIndex = 0;
@@ -351,37 +351,6 @@ private:
 		attributes[0].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
 		attributes[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 		attributes[0].InstanceDataStepRate = 0;
-
-		creator->CreateInputLayout(attributes, ARRAYSIZE(attributes),
-			vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
-			vertexFormat.GetAddressOf());*/
-
-
-		D3D11_INPUT_ELEMENT_DESC attributes[3];
-
-		attributes[0].SemanticName = "POSITION";
-		attributes[0].SemanticIndex = 0;
-		attributes[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-		attributes[0].InputSlot = 0;
-		attributes[0].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-		attributes[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-		attributes[0].InstanceDataStepRate = 0;
-
-		attributes[1].SemanticName = "UV";
-		attributes[1].SemanticIndex = 0;
-		attributes[1].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-		attributes[1].InputSlot = 0;
-		attributes[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-		attributes[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-		attributes[1].InstanceDataStepRate = 0;
-
-		attributes[2].SemanticName = "NORMAL";
-		attributes[2].SemanticIndex = 0;
-		attributes[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-		attributes[2].InputSlot = 0;
-		attributes[2].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-		attributes[2].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-		attributes[2].InstanceDataStepRate = 0;
 
 		creator->CreateInputLayout(attributes, ARRAYSIZE(attributes),
 			vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
@@ -404,15 +373,6 @@ public:
 		memcpy(mappedSubresource.pData, &shaderVars, sizeof(SHADER_VARS));
 		curHandles.context->Unmap(constantBuffer.Get(), 0);
 
-		/*for (size_t i = 0; i < worldMatricesForCube.size(); i++)
-		{
-			curHandles.context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource);
-			shaderVars.worldMatrix = worldMatricesForCube[i];
-			memcpy(mappedSubresource.pData, &shaderVars, sizeof(SHADER_VARS));
-			curHandles.context->Unmap(constantBuffer.Get(), 0);
-			curHandles.context->Draw(104, 0);
-		}*/
-
 		ReleasePipelineHandles(curHandles);
 	}
 
@@ -423,9 +383,6 @@ public:
 		std::chrono::steady_clock::time_point currentTime = std::chrono::steady_clock::now();
 		float deltaTime = std::chrono::duration<float>(currentTime - timePassed).count();
 		timePassed = currentTime;
-
-		matrixProxy.IdentityF(originalCameraMatrix);
-		matrixProxy.IdentityF(savedCameraMatrix);
 
 		// TODO: Part 4C 
 		// Inverse viewMatrix to set it into world space
@@ -438,7 +395,7 @@ public:
 			totalPitch = 0.0f,
 			totalYaw = 0.0f;
 
-		const float cameraSpeed = 1.0f;
+		const float cameraSpeed = 3.0f;
 		float perFrameSpeed = 0.0f;
 		float thumbStickSpeed = 0.0f;
 		float fov = G2D_DEGREE_TO_RADIAN_F(65.0f);
@@ -523,6 +480,12 @@ public:
 		// then send the new viewMatrix to the GPU
 		matrixProxy.InverseF(cameraMatrix, viewMatrix);
 		shaderVars.viewMatrix = viewMatrix;
+		
+		shaderVars.worldMatrix = cameraMatrix;
+
+		GW::MATH::GVECTORF cameraWorldPos = cameraMatrix.row4;
+		shaderVars.cameraPosition = cameraWorldPos;
+		
 
 	}
 
@@ -550,6 +513,7 @@ private:
 		SetShaders(handles);
 		//TODO: Part 2E 
 		handles.context->VSSetConstantBuffers(2, 1, constantBuffer.GetAddressOf());
+		handles.context->PSSetConstantBuffers(2, 1, constantBuffer.GetAddressOf());
 		handles.context->IASetInputLayout(vertexFormat.Get());
 		handles.context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST); //TODO: Part 1B 
 	}

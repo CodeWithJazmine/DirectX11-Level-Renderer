@@ -44,6 +44,7 @@ cbuffer SHADER_VARS : register(b2)
     float4x4 cworldMatrix;
     float4x4 cviewMatrix;
     float4x4 cprojectionMatrix;
+    float4 cameraPosition;
 };
 
 float4 main(float4 posH : SV_POSITION, float3 posW : WORLD, float3 normW : NORMAL) : SV_TARGET
@@ -55,7 +56,7 @@ float4 main(float4 posH : SV_POSITION, float3 posW : WORLD, float3 normW : NORMA
     float3 result = lightRatio * sunColor.xyz * material.Kd;
     
     //calculate specular reflection
-    float3 viewDir = normalize(cameraPos.xyz - posW);
+    float3 viewDir = normalize(cameraPosition.xyz - posW);
     float3 halfVector = normalize((-sunDirection.xyz) + viewDir);
     float intensity = max(pow(saturate(dot(normalize(normW), halfVector)), (material.Ns + 0.000001f)), 0);
     
@@ -63,7 +64,8 @@ float4 main(float4 posH : SV_POSITION, float3 posW : WORLD, float3 normW : NORMA
 
     result = result + reflectedLight;
     
-    return float4(result, 1.0f);
     
+    return float4(result, 1.0f);
 }
+
 
