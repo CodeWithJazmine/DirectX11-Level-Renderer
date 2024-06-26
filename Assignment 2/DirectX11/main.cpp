@@ -10,16 +10,20 @@
 #define GATEWARE_ENABLE_MATH // enables Gateware's math library
 #define GATEWARE_ENABLE_INPUT // enables Gateware's input library
 // With what we want & what we don't defined we can include the API
+
 #include "../gateware-main/Gateware.h"
+#include <ShObjIdl.h> // allows for dialog boxes
 #include "FileIntoString.h"
 #include "RenderManager.h" // example rendering code (not Gateware code!)
 #include "Camera.h"
+#include "DialogBox.h" 
 
 // open some namespaces to compact the code a bit
 using namespace GW;
 using namespace CORE;
 using namespace SYSTEM;
 using namespace GRAPHICS;
+
 // lets pop a window and use D3D11 to clear to a green screen
 int main()
 {
@@ -41,14 +45,20 @@ int main()
 			RenderManager renderer(win, d3d11);
 			Camera camera(win, d3d11);
 
+
 			while (+win.ProcessWindowEvents())
 			{
-				//
+				// Pressing F1 opens dialog box to load in new level
 				if (GetAsyncKeyState(VK_F1) & 0x0001)
 				{
-					std::cout << "F1 key was pressed. Loading new level... \n";
-					renderer.LoadNewLevel();
+					std::cout << "F1 key was pressed. Opening file dialog...\n";
+					std::string filePath = FileDialogs::OpenFile("Text File\0*.txt\0");
+					if (!filePath.empty())
+					{
+						renderer.LoadNewLevel(filePath);
+					}
 				}
+				// Pressing ESC quits the program
 				if (GetAsyncKeyState(VK_ESCAPE) & 0x0001)
 				{
 					std::cout << "Quitting the program...\n";
@@ -66,7 +76,6 @@ int main()
 				{
 					con->ClearRenderTargetView(view, clr);
 					con->ClearDepthStencilView(depth, D3D11_CLEAR_DEPTH, 1, 0);
-					//renderer.Update();
 					camera.UpdateCamera();
 					camera.UpdateConstantBuffer();
 					renderer.Render();
@@ -77,6 +86,8 @@ int main()
 					depth->Release();
 					con->Release();
 				}
+
+				
 			}
 		}
 	}

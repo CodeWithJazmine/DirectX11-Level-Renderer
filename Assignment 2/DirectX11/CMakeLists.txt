@@ -22,6 +22,7 @@ set(SOURCE_CODE
 	h2bParser.h
 	load_object_oriented.h
 	Camera.h
+	DialogBox.h
 	#TODO: Part 1B (optional)
 )
 
