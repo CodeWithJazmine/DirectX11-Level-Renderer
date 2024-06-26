@@ -45,6 +45,7 @@ class Model {
 	Microsoft::WRL::ComPtr<ID3D11VertexShader>	vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader>	pixelShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout>	vertexFormat;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState>	wireframeRS;
 
 	GW::MATH::GMatrix  matrixProxy;
 	GW::MATH::GMATRIXF worldMatrix;
@@ -56,6 +57,7 @@ class Model {
 	GW::MATH::GVECTORF lightDirection;
 	GW::MATH::GVECTORF lightColor;
 	GW::MATH::GVECTORF sunAmbient;
+
 
 	SceneData sceneData;
 	MeshData meshData;
@@ -102,6 +104,9 @@ private:
 		InitializeSceneConstantBuffer(creator, &sceneData);
 		InitializeMeshConstantBuffer(creator, &meshData);
 
+		// for wireframe rendering
+		//InitializeRenderStates(creator);
+
 		InitializePipeline(creator);
 
 		// free temporary handle
@@ -144,6 +149,17 @@ private:
 		D3D11_SUBRESOURCE_DATA mcbData = { data, 0, 0 };
 		CD3D11_BUFFER_DESC mcbDesc(sizeof(MeshData), D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
 		creator->CreateBuffer(&mcbDesc, &mcbData, meshConstantBuffer.GetAddressOf());
+	}
+
+	void InitializeRenderStates(ID3D11Device* creator)
+	{
+		D3D11_RASTERIZER_DESC wfd;
+		ZeroMemory(&wfd, sizeof(D3D11_RASTERIZER_DESC));
+		wfd.FillMode = D3D11_FILL_WIREFRAME;
+		wfd.CullMode = D3D11_CULL_NONE;
+		wfd.DepthClipEnable = true;
+
+		creator->CreateRasterizerState(&wfd, &wireframeRS);
 	}
 
 	void InitializeMatrices(GW::GRAPHICS::GDirectX11Surface d3d)
@@ -316,10 +332,16 @@ private:
 		SetVertexBuffers(handles);
 		SetIndexBuffers(handles);
 		SetConstantBuffers(handles);
+		SetRasterizerState(handles);
 		SetShaders(handles);
 
 		handles.context->IASetInputLayout(vertexFormat.Get());
 		handles.context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	}
+
+	void SetRasterizerState(PipelineHandles handles)
+	{
+		handles.context->RSSetState(wireframeRS.Get());
 	}
 
 	void SetRenderTargets(PipelineHandles handles)
@@ -356,8 +378,8 @@ private:
 		handles.context->VSSetConstantBuffers(1, 1, meshConstantBuffer.GetAddressOf());
 		handles.context->PSSetConstantBuffers(1, 1, meshConstantBuffer.GetAddressOf());
 
-		
 	}
+
 	void ReleasePipelineHandles(PipelineHandles toRelease)
 	{
 		toRelease.depthStencil->Release();
@@ -373,9 +395,6 @@ public:
 			SetUpPipeline(curHandles);
 			D3D11_MAPPED_SUBRESOURCE mappedResource;
 
-			/*curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-			memcpy(mappedResource.pData, &meshData, sizeof(MeshData));
-			curHandles.context->Unmap(meshConstantBuffer.Get(), 0);*/
 
 			for (auto& m : cpuModel.meshes)
 			{
@@ -390,37 +409,6 @@ public:
 				
 			return false;
 
-		//PipelineHandles curHandles = GetCurrentPipelineHandles(d3d);
-		//SetUpPipeline(curHandles);
-
-		//// Set the scene constant buffer for the vertex shader
-		//curHandles.context->VSSetConstantBuffers(0, 1, sceneConstantBuffer.GetAddressOf());
-		//// Set the scene constant buffer for the pixel shader
-		//curHandles.context->PSSetConstantBuffers(0, 1, sceneConstantBuffer.GetAddressOf());
-
-		//for (auto& m : cpuModel.meshes) {
-		//	// Update the material properties in the constant buffer
-		//	meshData.material = cpuModel.materials[m.materialIndex].attrib;
-
-		//	D3D11_MAPPED_SUBRESOURCE mappedResource;
-		//	if (SUCCEEDED(curHandles.context->Map(meshConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource))) {
-		//		MeshData* buffer = reinterpret_cast<MeshData*>(mappedResource.pData);
-		//		*buffer = meshData;
-		//		curHandles.context->Unmap(meshConstantBuffer.Get(), 0);
-		//	}
-
-		//	// Set the mesh constant buffer for the vertex shader
-		//	curHandles.context->VSSetConstantBuffers(1, 1, meshConstantBuffer.GetAddressOf());
-		//	// Set the mesh constant buffer for the pixel shader
-		//	curHandles.context->PSSetConstantBuffers(1, 1, meshConstantBuffer.GetAddressOf());
-
-		//	// Draw the mesh
-		//	curHandles.context->DrawIndexed(m.drawInfo.indexCount, m.drawInfo.indexOffset, 0);
-		//}
-
-		//ReleasePipelineHandles(curHandles);
-
-		//return false;
 	}
 
 	bool FreeResources(PipelineHandles toRelease) {

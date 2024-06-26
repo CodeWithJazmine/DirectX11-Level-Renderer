@@ -17,6 +17,7 @@
 #include "RenderManager.h" // example rendering code (not Gateware code!)
 #include "Camera.h"
 #include "DialogBox.h" 
+//#include "Wireframes.h"
 
 // open some namespaces to compact the code a bit
 using namespace GW;
