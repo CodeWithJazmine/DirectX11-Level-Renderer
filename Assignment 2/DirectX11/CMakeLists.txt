@@ -21,6 +21,7 @@ set(SOURCE_CODE
 	FileIntoString.h
 	h2bParser.h
 	load_object_oriented.h
+	Camera.h
 	#TODO: Part 1B (optional)
 )
 

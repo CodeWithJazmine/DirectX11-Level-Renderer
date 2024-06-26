@@ -13,6 +13,7 @@
 #include "../gateware-main/Gateware.h"
 #include "FileIntoString.h"
 #include "RenderManager.h" // example rendering code (not Gateware code!)
+#include "Camera.h"
 
 // open some namespaces to compact the code a bit
 using namespace GW;
@@ -38,10 +39,22 @@ int main()
 		if (+d3d11.Create(win, GW::GRAPHICS::DEPTH_BUFFER_SUPPORT))
 		{
 			RenderManager renderer(win, d3d11);
-			CameraController camera(win, d3d11);
+			Camera camera(win, d3d11);
 
 			while (+win.ProcessWindowEvents())
 			{
+				//
+				if (GetAsyncKeyState(VK_F1) & 0x0001)
+				{
+					std::cout << "F1 key was pressed. Loading new level... \n";
+					renderer.LoadNewLevel();
+				}
+				if (GetAsyncKeyState(VK_ESCAPE) & 0x0001)
+				{
+					std::cout << "Quitting the program...\n";
+					break;
+				}
+
 				IDXGISwapChain* swap;
 				ID3D11DeviceContext* con;
 				ID3D11RenderTargetView* view;
@@ -55,7 +68,7 @@ int main()
 					con->ClearDepthStencilView(depth, D3D11_CLEAR_DEPTH, 1, 0);
 					//renderer.Update();
 					camera.UpdateCamera();
-					camera.Render();
+					camera.UpdateConstantBuffer();
 					renderer.Render();
 					swap->Present(1, 0);
 					// release incremented COM reference counts
