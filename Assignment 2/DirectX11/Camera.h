@@ -204,8 +204,9 @@ private:
 
 	void InitializeViewMatrix()
 	{
-		GW::MATH::GVECTORF eyePos = { 0.25f, -0.125f, -0.25f };
-		GW::MATH::GVECTORF lookAtPos = { 0.0f, 0.0f, 0.0f };
+		//GW::MATH::GVECTORF eyePos = { 0.25f, -0.125f, -0.25f };
+		GW::MATH::GVECTORF eyePos = { 0.0f, 1.5f, -1.0f };
+		GW::MATH::GVECTORF lookAtPos = { 0.0f, 1.5f, 0.0f };
 		GW::MATH::GVECTORF upPos = { 0.0f, 1.0f, 0.0f };
 
 		matrixProxy.LookAtLHF(eyePos, lookAtPos, upPos, viewMatrix);
