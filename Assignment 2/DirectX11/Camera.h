@@ -350,8 +350,8 @@ public:
 		shaderVars.cameraPosition = cameraWorldPos;
 
 
-		std::cout << "Camera Position: " << cameraWorldPos.x << ", " << cameraWorldPos.y << ", " << cameraWorldPos.z << std::endl;
-		std::cout << "Camera Look At: " << cameraMatrix.row3.x << ", " << cameraMatrix.row3.y << ", " << cameraMatrix.row3.z << std::endl;
+		/*std::cout << "Camera Position: " << cameraWorldPos.x << ", " << cameraWorldPos.y << ", " << cameraWorldPos.z << std::endl;
+		std::cout << "Camera Look At: " << cameraMatrix.row3.x << ", " << cameraMatrix.row3.y << ", " << cameraMatrix.row3.z << std::endl;*/
 
 	}
 

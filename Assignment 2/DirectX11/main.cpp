@@ -47,8 +47,7 @@ int main()
 		{
 			RenderManager renderer(win, d3d11);
 			Camera camera(win, d3d11);
-			
-
+			Audio audio;
 
 			while (+win.ProcessWindowEvents())
 			{
@@ -73,6 +72,7 @@ int main()
 				{
 					int cameraState = camera.GetCameraState();
 					camera.SwitchCamera(cameraState);
+					audio.PlaySoundEffect();
 				}
 
 				IDXGISwapChain* swap;

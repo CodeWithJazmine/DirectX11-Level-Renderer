@@ -23,6 +23,7 @@ set(SOURCE_CODE
 	load_object_oriented.h
 	Camera.h
 	DialogBox.h
+	Audio.h
 	#TODO: Part 1B (optional)
 )
 
