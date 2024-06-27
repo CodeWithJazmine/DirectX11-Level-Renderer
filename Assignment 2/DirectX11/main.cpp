@@ -9,6 +9,8 @@
 #define GATEWARE_DISABLE_GVULKANSURFACE // we have another template for this
 #define GATEWARE_ENABLE_MATH // enables Gateware's math library
 #define GATEWARE_ENABLE_INPUT // enables Gateware's input library
+#define GATEWARE_ENABLE_AUDIO // enables Gateware's audio library
+
 // With what we want & what we don't defined we can include the API
 
 #include "../gateware-main/Gateware.h"
@@ -17,6 +19,7 @@
 #include "RenderManager.h" // example rendering code (not Gateware code!)
 #include "Camera.h"
 #include "DialogBox.h" 
+#include "Audio.h"
 
 // open some namespaces to compact the code a bit
 using namespace GW;
@@ -44,6 +47,7 @@ int main()
 		{
 			RenderManager renderer(win, d3d11);
 			Camera camera(win, d3d11);
+			
 
 
 			while (+win.ProcessWindowEvents())
@@ -63,6 +67,12 @@ int main()
 				{
 					std::cout << "Quitting the program...\n";
 					break;
+				}
+				// Pressing 'C' switches the camera state
+				if (GetAsyncKeyState(0x43) & 0x0001)
+				{
+					int cameraState = camera.GetCameraState();
+					camera.SwitchCamera(cameraState);
 				}
 
 				IDXGISwapChain* swap;

@@ -53,12 +53,17 @@ class Camera
 
 	float prevMouseX,
 		prevMouseY;
+
+	int cameraState;
 public:
 	Camera(GW::SYSTEM::GWindow _win, GW::GRAPHICS::GDirectX11Surface _d3d)
 	{
 		win = _win;
 		d3d = _d3d;
- 
+		
+		// default camera state
+		cameraState = 0;
+
 		matrixProxy.Create();
 		vectorProxy.Create();
 
@@ -68,14 +73,15 @@ public:
 		shaderVars.worldMatrix = worldMatrix;
 
 		InitializeViewMatrix();
-		shaderVars.viewMatrix = viewMatrix;
+		//shaderVars.viewMatrix = viewMatrix;
 
 		InitializeProjectionMatrix();
-		shaderVars.projectionMatrix = projectionMatrix;
+		
 
 
 		timePassed = std::chrono::steady_clock::now();
 		inputProxy.GetMousePosition(prevMouseX, prevMouseY);
+
 
 		InitializeGraphics();
 	}
@@ -93,19 +99,6 @@ private:
 		creator->Release();
 	}
 
-	void InitializeWorldMatrix()
-	{
-		matrixProxy.IdentityF(worldMatrix);
-		// Rotate matrix 90 degrees about the x axis
-		matrixProxy.RotateXGlobalF(worldMatrix, G_DEGREE_TO_RADIAN_F(90.0f), worldMatrix);
-
-		// Translate matrix down the y axis by 0.5f units
-		GW::MATH::GVECTORF translationVector = { 0.0f, -0.5f };
-		matrixProxy.TranslateGlobalF(worldMatrix, translationVector, worldMatrix);
-	}
-
-
-
 	void InitializeViewMatrix()
 	{
 
@@ -114,6 +107,7 @@ private:
 		GW::MATH::GVECTORF upPos = { 0.0f, 1.0f, 0.0f };
 
 		matrixProxy.LookAtLHF(eyePos, lookAtPos, upPos, viewMatrix);
+		shaderVars.viewMatrix = viewMatrix;
 	}
 
 	void InitializeProjectionMatrix()
@@ -125,6 +119,7 @@ private:
 		float farPlane = 100.0f;
 
 		matrixProxy.ProjectionDirectXLHF(fov, aspectRatio, nearPlane, farPlane, projectionMatrix);
+		shaderVars.projectionMatrix = projectionMatrix;
 	}
 
 	void InitializeConstantBuffer(ID3D11Device* creator, const void* data)
@@ -260,7 +255,6 @@ public:
 		// Inverse viewMatrix to set it into world space
 		matrixProxy.InverseF(viewMatrix, cameraMatrix);
 
-		// TODO: Part 4D 
 		float totalYChange = 0.0f,
 			totalZChange = 0.0f,
 			totalXChange = 0.0f,
@@ -356,8 +350,71 @@ public:
 		shaderVars.cameraPosition = cameraWorldPos;
 
 
+		std::cout << "Camera Position: " << cameraWorldPos.x << ", " << cameraWorldPos.y << ", " << cameraWorldPos.z << std::endl;
+		std::cout << "Camera Look At: " << cameraMatrix.row3.x << ", " << cameraMatrix.row3.y << ", " << cameraMatrix.row3.z << std::endl;
+
 	}
 
+	bool SwitchCamera(int& cameraState)
+	{
+		std::cout << "Switching Camera\n";
+
+		switch (cameraState) {
+		case 0:
+			// Set 1st camera position ( puzzel room camera )
+		{
+			GW::MATH::GVECTORF eyePos1 = { -9.99372, 4.25856, -17.2818 };
+			GW::MATH::GVECTORF lookAtPos1 = { 0.649649, -0.177245, 0.739309 };
+			GW::MATH::GVECTORF upPos1 = { 0.0f, 1.0f, 0.0f };
+			matrixProxy.LookAtLHF(eyePos1, lookAtPos1, upPos1, viewMatrix);
+			shaderVars.viewMatrix = viewMatrix;
+			break;
+		}
+
+		case 1:
+			// Set 2nd camera position ( library camera )
+		{
+			GW::MATH::GVECTORF eyePos2 = { 17.8372, 3.2878, -23.3044 };
+			GW::MATH::GVECTORF lookAtPos2 = { -0.776143, -0.279638, 0.565186 };
+			GW::MATH::GVECTORF upPos2 = { 0.0f, 1.0f, 0.0f };
+			matrixProxy.LookAtLHF(eyePos2, lookAtPos2, upPos2, viewMatrix);
+			shaderVars.viewMatrix = viewMatrix;
+			break;
+		}
+		case 2:
+		{
+			// Set 3rd camera position ( original pos )
+			GW::MATH::GVECTORF eyePos3 = { 0.0f, 1.5f, -1.0f };
+			GW::MATH::GVECTORF lookAtPos3 = { 0.0f, 1.5f, 0.0f };
+			GW::MATH::GVECTORF upPos3 = { 0.0f, 1.0f, 0.0f };
+			matrixProxy.LookAtLHF(eyePos3, lookAtPos3, upPos3, viewMatrix);
+			shaderVars.viewMatrix = viewMatrix;
+			break;
+		}
+
+		default:
+			// Handle invalid camera state or add more cases as needed
+			std::cerr << "Invalid camera state\n";
+			return false;
+		}
+
+		// Increment camera state for next switch
+		cameraState = (cameraState + 1) % 3;
+
+		SetCameraState(cameraState);
+
+		return true;
+
+	}
+	const int GetCameraState()
+	{
+		return cameraState;
+	}
+
+	int SetCameraState(int _cameraState)
+	{
+		return cameraState = _cameraState;
+	}
 private:
 	struct PipelineHandles
 	{
