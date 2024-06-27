@@ -3,11 +3,11 @@ struct VERTEX
 {
 	float x, y, z, w;
 };
-// TODO: Part 2B 
+
 struct SHADER_VARS
 {
 	GW::MATH::GMATRIXF worldMatrix;
-	// TODO: Part 2G 
+
 	GW::MATH::GMATRIXF viewMatrix;
 	GW::MATH::GMATRIXF projectionMatrix;
 	GW::MATH::GVECTORF cameraPosition;
@@ -18,38 +18,27 @@ class Camera
 	// proxy handles
 	GW::SYSTEM::GWindow win;
 	GW::GRAPHICS::GDirectX11Surface d3d;
-	// what we need at a minimum to draw a triangle
-	Microsoft::WRL::ComPtr<ID3D11Buffer>		vertexBuffer;
+
+
 	Microsoft::WRL::ComPtr<ID3D11VertexShader>	vertexShader;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader>	pixelShader;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout>	vertexFormat;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBuffer;
 
-	// TODO: Part 2A 
+
 	GW::MATH::GMATRIXF worldMatrix;
 	GW::MATH::GMatrix matrixProxy;
 	GW::MATH::GVector vectorProxy;
 
-	// TODO: Part 2C 
 	SHADER_VARS shaderVars;
 
-	// TODO: Part 2D 
-	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBuffer;
 
-	// TODO: Part 2G 
+
 	GW::MATH::GMATRIXF viewMatrix;
 
-	// TODO: Part 3A 
 	GW::MATH::GMATRIXF projectionMatrix;
 
-	// TODO: Part 3C 
-	std::vector<GW::MATH::GMATRIXF> worldMatricesForCube;
-	GW::MATH::GMATRIXF worldMatrixFront;
-	GW::MATH::GMATRIXF worldMatrixBack;
-	GW::MATH::GMATRIXF worldMatrixLeft;
-	GW::MATH::GMATRIXF worldMatrixRight;
-	GW::MATH::GMATRIXF worldMatrixCeiling;
 
-	// TODO: Part 4A 
 	GW::INPUT::GInput inputProxy;
 	GW::INPUT::GController controllerProxy;
 
@@ -69,28 +58,21 @@ public:
 	{
 		win = _win;
 		d3d = _d3d;
-		// TODO: Part 2A 
+ 
 		matrixProxy.Create();
 		vectorProxy.Create();
-		// TODO: Part 4A 
+
 		inputProxy.Create(_win);
 		controllerProxy.Create();
 
-		// TODO: Part 2C 
-		//InitializeWorldMatrix();
 		shaderVars.worldMatrix = worldMatrix;
 
-		// TODO: Part 2G 
 		InitializeViewMatrix();
 		shaderVars.viewMatrix = viewMatrix;
 
-		// TODO: Part 3A 
 		InitializeProjectionMatrix();
-		// TODO: Part 3B 
 		shaderVars.projectionMatrix = projectionMatrix;
 
-		// TODO: Part 3C 
-		InitializeWorldMatricesForCube();
 
 		timePassed = std::chrono::steady_clock::now();
 		inputProxy.GetMousePosition(prevMouseX, prevMouseY);
@@ -104,46 +86,11 @@ private:
 		ID3D11Device* creator;
 		d3d.GetDevice((void**)&creator);
 
-
-		InitializeVertexBuffer(creator);
-		//TODO: Part 2D 
 		InitializeConstantBuffer(creator, &shaderVars);
 		InitializePipeline(creator);
 
 		// free temporary handle
 		creator->Release();
-	}
-
-	void InitializeVertexBuffer(ID3D11Device* creator)
-	{
-		// TODO: Part 1B 
-		// TODO: Part 1C 
-		// TODO: Part 1D
-
-		std::vector<VERTEX> verts;
-		BuildGrid(verts);
-		CreateVertexBuffer(creator, verts.data(), sizeof(VERTEX) * verts.size());
-	}
-
-	void BuildGrid(std::vector<VERTEX>& verts)
-	{
-		float spacing = 1.0f / 25; // Determine spacing between grid lines
-
-		// Build horizontal lines
-		for (int i = 0; i <= 25; ++i)
-		{
-			float y = -0.5f + spacing * i;
-			verts.push_back({ -0.5f, y, 0.0f, 1.0f }); // Left point
-			verts.push_back({ 0.5f, y, 0.0f, 1.0f });  // Right point
-		}
-
-		// Build vertical lines
-		for (int i = 0; i <= 25; ++i)
-		{
-			float x = -0.5f + spacing * i;
-			verts.push_back({ x, -0.5f, 0.0f, 1.0f }); // Bottom point
-			verts.push_back({ x, 0.5f, 0.0f, 1.0f });  // Top point
-		}
 	}
 
 	void InitializeWorldMatrix()
@@ -157,54 +104,11 @@ private:
 		matrixProxy.TranslateGlobalF(worldMatrix, translationVector, worldMatrix);
 	}
 
-	void InitializeWorldMatricesForCube()
-	{
-
-		// Initialize matrices for each side of cube to identity
-		matrixProxy.IdentityF(worldMatrixFront);
-		matrixProxy.IdentityF(worldMatrixBack);
-		matrixProxy.IdentityF(worldMatrixLeft);
-		matrixProxy.IdentityF(worldMatrixRight);
-		matrixProxy.IdentityF(worldMatrixCeiling);
-
-		// Perform transformations for each matrix in the vector
-		GW::MATH::GVECTORF translationVector;
-		// Front wall
-		translationVector = { 0.0f, 0.0f, 0.5f };
-		matrixProxy.TranslateGlobalF(worldMatrixFront, translationVector, worldMatrixFront);
-
-		// Back wall
-		translationVector = { 0.0f, 0.0f, -0.5f };
-		matrixProxy.TranslateGlobalF(worldMatrixBack, translationVector, worldMatrixBack);
-
-		// Left wall
-		translationVector = { -0.5f, 0.0f, 0.0f };
-		matrixProxy.RotateYGlobalF(worldMatrixLeft, G_DEGREE_TO_RADIAN_F(90.0f), worldMatrixLeft);
-		matrixProxy.TranslateGlobalF(worldMatrixLeft, translationVector, worldMatrixLeft);
-
-		// Right wall
-		translationVector = { 0.5f, 0.0f, 0.0f };
-		matrixProxy.RotateYGlobalF(worldMatrixRight, G_DEGREE_TO_RADIAN_F(90.0f), worldMatrixRight);
-		matrixProxy.TranslateGlobalF(worldMatrixRight, translationVector, worldMatrixRight);
-
-		// Ceiling
-		translationVector = { 0.0f, 0.5f, 0.0f };
-		matrixProxy.RotateXGlobalF(worldMatrixCeiling, G_DEGREE_TO_RADIAN_F(90.0f), worldMatrixCeiling);
-		matrixProxy.TranslateGlobalF(worldMatrixCeiling, translationVector, worldMatrixCeiling);
-
-
-		worldMatricesForCube.push_back(worldMatrix);
-		worldMatricesForCube.push_back(worldMatrixFront);
-		worldMatricesForCube.push_back(worldMatrixBack);
-		worldMatricesForCube.push_back(worldMatrixLeft);
-		worldMatricesForCube.push_back(worldMatrixRight);
-		worldMatricesForCube.push_back(worldMatrixCeiling);
-	}
 
 
 	void InitializeViewMatrix()
 	{
-		//GW::MATH::GVECTORF eyePos = { 0.25f, -0.125f, -0.25f };
+
 		GW::MATH::GVECTORF eyePos = { 0.0f, 1.5f, -1.0f };
 		GW::MATH::GVECTORF lookAtPos = { 0.0f, 1.5f, 0.0f };
 		GW::MATH::GVECTORF upPos = { 0.0f, 1.0f, 0.0f };
@@ -221,14 +125,6 @@ private:
 		float farPlane = 100.0f;
 
 		matrixProxy.ProjectionDirectXLHF(fov, aspectRatio, nearPlane, farPlane, projectionMatrix);
-	}
-
-
-	void CreateVertexBuffer(ID3D11Device* creator, const void* data, unsigned int sizeInBytes)
-	{
-		D3D11_SUBRESOURCE_DATA bData = { data, 0, 0 };
-		CD3D11_BUFFER_DESC bDesc(sizeInBytes, D3D11_BIND_VERTEX_BUFFER);
-		creator->CreateBuffer(&bDesc, &bData, vertexBuffer.GetAddressOf());
 	}
 
 	void InitializeConstantBuffer(ID3D11Device* creator, const void* data)
@@ -305,8 +201,7 @@ private:
 
 	void CreateVertexInputLayout(ID3D11Device* creator, Microsoft::WRL::ComPtr<ID3DBlob>& vsBlob)
 	{
-		// TODO: Part 1C 
-		D3D11_INPUT_ELEMENT_DESC attributes[1];
+		D3D11_INPUT_ELEMENT_DESC attributes[3];
 
 		attributes[0].SemanticName = "POSITION";
 		attributes[0].SemanticIndex = 0;
@@ -315,6 +210,22 @@ private:
 		attributes[0].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
 		attributes[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 		attributes[0].InstanceDataStepRate = 0;
+
+		attributes[1].SemanticName = "UV";
+		attributes[1].SemanticIndex = 0;
+		attributes[1].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+		attributes[1].InputSlot = 0;
+		attributes[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+		attributes[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+		attributes[1].InstanceDataStepRate = 0;
+
+		attributes[2].SemanticName = "NORMAL";
+		attributes[2].SemanticIndex = 0;
+		attributes[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+		attributes[2].InputSlot = 0;
+		attributes[2].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+		attributes[2].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+		attributes[2].InstanceDataStepRate = 0;
 
 		creator->CreateInputLayout(attributes, ARRAYSIZE(attributes),
 			vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
@@ -346,7 +257,6 @@ public:
 		float deltaTime = std::chrono::duration<float>(currentTime - timePassed).count();
 		timePassed = currentTime;
 
-		// TODO: Part 4C 
 		// Inverse viewMatrix to set it into world space
 		matrixProxy.InverseF(viewMatrix, cameraMatrix);
 
@@ -415,7 +325,6 @@ public:
 		totalYChange = spaceKeyState - leftShiftState + rightTriggerState - leftTriggerState;
 		matrixProxy.TranslateGlobalF(cameraMatrix, GW::MATH::GVECTORF{ 0, totalYChange * cameraSpeed * deltaTime, 0, 1 }, cameraMatrix);
 
-		// TODO: Part 4E 
 		// Update horizontal movements
 		perFrameSpeed = cameraSpeed * deltaTime;
 		totalZChange = wKeyState - sKeyState + leftStickYAxisState;
@@ -427,13 +336,11 @@ public:
 		// Translate the camera in the direction of the transformed vector
 		matrixProxy.TranslateGlobalF(cameraMatrix, GW::MATH::GVECTORF{ localMoveDirection.x * perFrameSpeed, 0.0f, localMoveDirection.z * perFrameSpeed, 1.0f }, cameraMatrix);
 
-		// TODO: Part 4F 
 		// Update pitch movements
 		thumbStickSpeed = G2D_PI * deltaTime;
 		totalPitch = fov * mouseYDelta / screenHeight + rightStickYAxisState * thumbStickSpeed * -1;
 		matrixProxy.RotateXLocalF(cameraMatrix, totalPitch, cameraMatrix);
 
-		// TODO: Part 4G
 		// Update yaw movements
 		totalYaw = fov * screenAspectRatio * mouseXDelta / screenWidth + rightStickXAxisState * thumbStickSpeed;
 		matrixProxy.RotateYGlobalF(cameraMatrix, totalYaw, cameraMatrix);
@@ -471,28 +378,18 @@ private:
 	void SetUpPipeline(PipelineHandles handles)
 	{
 		SetRenderTargets(handles);
-		SetVertexBuffers(handles);
 		SetShaders(handles);
-		//TODO: Part 2E 
+		
 		handles.context->VSSetConstantBuffers(2, 1, constantBuffer.GetAddressOf());
 		handles.context->PSSetConstantBuffers(2, 1, constantBuffer.GetAddressOf());
 		handles.context->IASetInputLayout(vertexFormat.Get());
-		handles.context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST); //TODO: Part 1B 
+		handles.context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST); 
 	}
 
 	void SetRenderTargets(PipelineHandles handles)
 	{
 		ID3D11RenderTargetView* const views[] = { handles.targetView };
 		handles.context->OMSetRenderTargets(ARRAYSIZE(views), views, handles.depthStencil);
-	}
-
-	void SetVertexBuffers(PipelineHandles handles)
-	{
-		// TODO: Part 1C 
-		const UINT strides[] = { sizeof(VERTEX) };
-		const UINT offsets[] = { 0 };
-		ID3D11Buffer* const buffs[] = { vertexBuffer.Get() };
-		handles.context->IASetVertexBuffers(0, ARRAYSIZE(buffs), buffs, strides, offsets);
 	}
 
 	void SetShaders(PipelineHandles handles)
