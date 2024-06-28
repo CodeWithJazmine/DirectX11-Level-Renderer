@@ -13,6 +13,10 @@ D  - Move Right
 Space  - Move Up
 Left Shift - Move Down
 
+C  - Switch camera presets
+F1 - Opens File Dialog box
+ESC - Closes Application
+
 Mouse Controls:
 ---------------
 Move Mouse Left/Right - Rotate Camera Yaw

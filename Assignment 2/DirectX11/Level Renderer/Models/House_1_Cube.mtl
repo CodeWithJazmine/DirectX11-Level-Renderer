@@ -1,7 +1,7 @@
-# Blender 4.0.2 MTL File: 'Level2.blend'
+# Blender 4.0.2 MTL File: 'GameLevel2.blend'
 # www.blender.org
 
-newmtl Plaster
+newmtl Plaster.001
 Ns 96.078453
 Ka 1.000000 1.000000 1.000000
 Kd 0.343378 0.323983 0.183595
@@ -11,7 +11,7 @@ Ni 1.000000
 d 1.000000
 illum 2
 
-newmtl RoofTiles
+newmtl RoofTiles.001
 Ns 96.078453
 Ka 1.000000 1.000000 1.000000
 Kd 0.015384 0.096705 0.117848
@@ -21,7 +21,7 @@ Ni 1.000000
 d 1.000000
 illum 2
 
-newmtl Stone
+newmtl Stone.001
 Ns 96.078453
 Ka 1.000000 1.000000 1.000000
 Kd 0.077633 0.081879 0.095419
@@ -31,7 +31,7 @@ Ni 1.000000
 d 1.000000
 illum 2
 
-newmtl Stone_Dark
+newmtl Stone_Dark.001
 Ns 96.078453
 Ka 1.000000 1.000000 1.000000
 Kd 0.123762 0.146180 0.181264
@@ -41,7 +41,7 @@ Ni 1.000000
 d 1.000000
 illum 2
 
-newmtl Stone_Light
+newmtl Stone_Light.001
 Ns 96.078453
 Ka 1.000000 1.000000 1.000000
 Kd 0.177224 0.211411 0.230634
@@ -51,7 +51,7 @@ Ni 1.000000
 d 1.000000
 illum 2
 
-newmtl Windows
+newmtl Windows.001
 Ns 96.078453
 Ka 1.000000 1.000000 1.000000
 Kd 0.028173 0.028173 0.028173
@@ -61,7 +61,7 @@ Ni 1.000000
 d 1.000000
 illum 2
 
-newmtl Wood
+newmtl Wood.001
 Ns 96.078453
 Ka 1.000000 1.000000 1.000000
 Kd 0.122341 0.054783 0.019326
@@ -71,7 +71,7 @@ Ni 1.000000
 d 1.000000
 illum 2
 
-newmtl Wood_Light
+newmtl Wood_Light.001
 Ns 96.078453
 Ka 1.000000 1.000000 1.000000
 Kd 0.213407 0.092240 0.031750
@@ -81,7 +81,7 @@ Ni 1.000000
 d 1.000000
 illum 2
 
-newmtl Wood_Side
+newmtl Wood_Side.001
 Ns 96.078453
 Ka 1.000000 1.000000 1.000000
 Kd 0.307496 0.227094 0.099591
