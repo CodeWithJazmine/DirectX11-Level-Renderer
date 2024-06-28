@@ -90,7 +90,7 @@ public:
 		return true;
 	}
 
-private:
+	public:
 	//constructor helper functions
 	void IntializeGraphics(GW::GRAPHICS::GDirectX11Surface d3d)
 	{
@@ -529,11 +529,6 @@ public:
 			e.DrawModel(win, d3d);
 		}
 
-		//auto it = allObjectsInLevel.begin();
-		//std::advance(it, 1); // Move the iterator to the second element
-
-		//// Draw the second object
-		//it->DrawModel(win, d3d);
 	}
 	// used to wipe CPU & GPU level data between levels
 	void UnloadLevel() {

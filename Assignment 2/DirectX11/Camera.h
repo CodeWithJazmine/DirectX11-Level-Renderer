@@ -13,6 +13,12 @@ struct SHADER_VARS
 	GW::MATH::GVECTORF cameraPosition;
 };
 
+struct MinimapShaderVars
+{
+	GW::MATH::GMATRIXF viewMatrix;
+	GW::MATH::GMATRIXF projectionMatrix;
+
+};
 class Camera
 {
 	// proxy handles
@@ -31,7 +37,7 @@ class Camera
 	GW::MATH::GVector vectorProxy;
 
 	SHADER_VARS shaderVars;
-
+	MinimapShaderVars minimapShaderVars;
 
 
 	GW::MATH::GMATRIXF viewMatrix;
@@ -55,6 +61,13 @@ class Camera
 		prevMouseY;
 
 	int cameraState;
+
+	// For minimap
+	GW::MATH::GMATRIXF minimapViewMatrix;
+	GW::MATH::GMATRIXF minimapProjectionMatrix;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> minimapConstantBuffer;
+
+
 public:
 	Camera(GW::SYSTEM::GWindow _win, GW::GRAPHICS::GDirectX11Surface _d3d)
 	{
@@ -73,11 +86,10 @@ public:
 		shaderVars.worldMatrix = worldMatrix;
 
 		InitializeViewMatrix();
-		//shaderVars.viewMatrix = viewMatrix;
-
 		InitializeProjectionMatrix();
-		
 
+		InitializeMiniMapViewMatrix();
+		InitializeMiniMapProjectionMatrix();
 
 		timePassed = std::chrono::steady_clock::now();
 		inputProxy.GetMousePosition(prevMouseX, prevMouseY);
@@ -93,6 +105,8 @@ private:
 		d3d.GetDevice((void**)&creator);
 
 		InitializeConstantBuffer(creator, &shaderVars);
+		InitializeMiniMapConstantBuffer(creator, &minimapShaderVars);
+
 		InitializePipeline(creator);
 
 		// free temporary handle
@@ -129,6 +143,33 @@ private:
 		creator->CreateBuffer(&cbDesc, &cbData, constantBuffer.GetAddressOf());
 	}
 
+	// === Minimap ===
+	void InitializeMiniMapViewMatrix()
+	{
+		// temporary values
+		GW::MATH::GVECTORF eyePos = { 0.0f, 1.5f, -1.0f };
+		GW::MATH::GVECTORF lookAtPos = { 0.0f, 1.5f, 0.0f };
+		GW::MATH::GVECTORF upPos = { 0.0f, 1.0f, 0.0f };
+
+		matrixProxy.LookAtLHF(eyePos, lookAtPos, upPos, minimapViewMatrix);
+	}
+
+	void InitializeMiniMapProjectionMatrix()
+	{
+		float fov = G2D_DEGREE_TO_RADIAN_F(65.0f);
+		float aspectRatio;
+		d3d.GetAspectRatio(aspectRatio);
+		float nearPlane = 0.1f;
+		float farPlane = 100.0f;
+
+		matrixProxy.ProjectionDirectXLHF(fov, aspectRatio, nearPlane, farPlane, minimapProjectionMatrix);
+	}
+	void InitializeMiniMapConstantBuffer(ID3D11Device* creator, const void* data)
+	{
+		D3D11_SUBRESOURCE_DATA mmcbData = { data, 0, 0 };
+		CD3D11_BUFFER_DESC mmcbDesc(sizeof(MinimapShaderVars), D3D11_BIND_CONSTANT_BUFFER, D3D11_USAGE_DYNAMIC, D3D11_CPU_ACCESS_WRITE);
+		creator->CreateBuffer(&mmcbDesc, &mmcbData, minimapConstantBuffer.GetAddressOf());
+	}
 
 	void InitializePipeline(ID3D11Device* creator)
 	{
@@ -226,6 +267,7 @@ private:
 			vsBlob->GetBufferPointer(), vsBlob->GetBufferSize(),
 			vertexFormat.GetAddressOf());
 	}
+
 
 
 
@@ -415,6 +457,8 @@ public:
 	{
 		return cameraState = _cameraState;
 	}
+
+
 private:
 	struct PipelineHandles
 	{
@@ -461,6 +505,7 @@ private:
 		toRelease.targetView->Release();
 		toRelease.context->Release();
 	}
+
 
 public:
 	~Camera() {}

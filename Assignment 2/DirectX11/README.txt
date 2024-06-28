@@ -3,6 +3,10 @@ Jazmine Chargualaf
 Level Renderer
 June 2024
 
+ESC - Closes Application
+C  - Switch Camera Presets
+F1 - Open File Dialog Box
+(Select a "GameLevel" text file found inside the Level Renderer folder)
 
 Keyboard Controls:
 ------------------
@@ -12,10 +16,6 @@ A  - Move Left
 D  - Move Right
 Space  - Move Up
 Left Shift - Move Down
-
-C  - Switch camera presets
-F1 - Opens File Dialog box
-ESC - Closes Application
 
 Mouse Controls:
 ---------------
@@ -30,3 +30,17 @@ Right Stick (Y Axis) - Rotate Camera Pitch
 Right Stick (X Axis) - Rotate Camera Yaw
 Right Trigger - Move Up
 Left Trigger  - Move Down
+
+Credits
+---------------------
+Game Level 1 Models from:
+https://quaternius.com/packs/medievaldungeon.html
+
+Game Level 2 Models from:
+https://quaternius.com/packs/medievalvillage.html
+
+Music by extenz
+https://opengameart.org/content/emotional-piano-loop
+
+Sound effect by UNIVERSFIELD
+https://pixabay.com/sound-effects/message-incoming-2-199577/

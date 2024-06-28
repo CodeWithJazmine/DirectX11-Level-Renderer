@@ -54,6 +54,7 @@ public:
 
 		level.UploadLevelToGPU(win, d3d);
 	}
+
 	~RenderManager()
 	{
 		// ComPtr will auto release so nothing to do here yet
