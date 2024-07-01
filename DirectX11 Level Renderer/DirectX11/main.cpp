@@ -33,14 +33,16 @@ int main()
 	GWindow win;
 	GEventResponder msgs;
 	GDirectX11Surface d3d11;
-	if (+win.Create(0, 0, 1920, 1080, GWindowStyle::WINDOWEDBORDERLESS))
+	if (+win.Create(0, 0, 800, 600, GWindowStyle::WINDOWEDBORDERED))
 	{
 		win.SetWindowName("Jazmine Chargualaf - Level Renderer - DirextX11");
 		float clr[] = { 1.0f, 192 / 255.0f, 203 / 255.0f, 1 }; 
 		msgs.Create([&](const GW::GEvent& e) {
 			GW::SYSTEM::GWindow::Events q;
 			if (+e.Read(q) && q == GWindow::Events::RESIZE)
+			{
 				clr[2] += 0.01f; // move towards a cyan as they resize
+			}
 		});
 		win.Register(msgs);
 		if (+d3d11.Create(win, GW::GRAPHICS::DEPTH_BUFFER_SUPPORT))
