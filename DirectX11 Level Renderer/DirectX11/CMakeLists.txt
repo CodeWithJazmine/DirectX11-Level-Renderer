@@ -16,14 +16,14 @@ set(PIXEL_SHADERS
 # Add any new C/C++ source code here
 set(SOURCE_CODE
 	# Header & CPP files go here
-	main.cpp
-	RenderManager.h
-	FileIntoString.h
-	h2bParser.h
-	load_object_oriented.h
-	Camera.h
-	DialogBox.h
-	Audio.h
+	Source/main.cpp
+	Source/RenderManager.h
+	Source/Utility/FileIntoString.h
+	Source/Utility/h2bParser.h
+	Source/Utility/load_object_oriented.h
+	Source/Camera.h
+	Source/DialogBox.h
+	Source/Audio.h
 )
 
 if(WIN32)
