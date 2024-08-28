@@ -10,10 +10,10 @@ class Audio
 			audio.Create();
 			std::cout << "GAudio proxy created\n";
 
-			music.Create("../Audio Files/Piano Loop.wav", audio, 0.1f);
+			music.Create("../Sound Files/Piano Loop.wav", audio, 0.1f);
 			std::cout << "GMusic created\n";
 
-			sound.Create("../Audio Files/message-incoming-2-199577.wav", audio, 0.08f);
+			sound.Create("../Sound Files/message-incoming-2-199577.wav", audio, 0.08f);
 			std::cout << "GSound created\n";
 
 			music.Play(true); // plays and 'true' loops the music

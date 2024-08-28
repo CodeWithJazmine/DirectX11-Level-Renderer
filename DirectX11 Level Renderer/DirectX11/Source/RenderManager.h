@@ -18,10 +18,10 @@ public:
 		win = _win;
 		d3d = _d3d;
 		
-		log.Create("../Level Renderer/LevelLoaderLog.txt");
+		log.Create("../Levels/LevelLoaderLog.txt");
 		log.EnableConsoleLogging(true);
 
-		bool status = level.LoadLevel("../Level Renderer/GameLevel.txt", "../Level Renderer/Models", log.Relinquish());
+		bool status = level.LoadLevel("../Levels/GameLevel.txt", "../Levels/Models", log.Relinquish());
 		
 		level.UploadLevelToGPU(win, d3d);
 	}
@@ -41,16 +41,16 @@ public:
 		}
 
 		// Assuming the game path is inside a Level Renderer folder
-		std::string relativePath = "../Level Renderer/" + _filePath;
+		std::string relativePath = "../Levels/" + _filePath;
 
 		// Other wise I want to just use _filePath (needs to be implented)
 
 		const char* filePath = relativePath.c_str();
 
-		log.Create("../Level Renderer/LevelLoaderLog.txt");
+		log.Create("../Levels/LevelLoaderLog.txt");
 		log.EnableConsoleLogging(true);
 
-		bool status = level.LoadLevel(filePath, "../Level Renderer/Models", log.Relinquish());
+		bool status = level.LoadLevel(filePath, "../Levels/Models", log.Relinquish());
 
 		level.UploadLevelToGPU(win, d3d);
 	}

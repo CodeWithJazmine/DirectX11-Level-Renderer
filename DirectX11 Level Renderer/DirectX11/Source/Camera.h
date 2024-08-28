@@ -147,22 +147,24 @@ private:
 	void InitializeMiniMapViewMatrix()
 	{
 		// temporary values
-		GW::MATH::GVECTORF eyePos = { 0.0f, 1.5f, -1.0f };
-		GW::MATH::GVECTORF lookAtPos = { 0.0f, 1.5f, 0.0f };
-		GW::MATH::GVECTORF upPos = { 0.0f, 1.0f, 0.0f };
+		GW::MATH::GVECTORF eyePos = { 0.0f, 50.0f, 0.0f };
+		GW::MATH::GVECTORF lookAtPos = { 0.0f, 0.0f, 0.0f };
+		GW::MATH::GVECTORF upPos = { 0.0f, 0.0f, -1.0f };
 
 		matrixProxy.LookAtLHF(eyePos, lookAtPos, upPos, minimapViewMatrix);
+		minimapShaderVars.viewMatrix = minimapViewMatrix;
 	}
 
 	void InitializeMiniMapProjectionMatrix()
 	{
-		float fov = G2D_DEGREE_TO_RADIAN_F(65.0f);
-		float aspectRatio;
-		d3d.GetAspectRatio(aspectRatio);
+		float fov = G2D_DEGREE_TO_RADIAN_F(45.0f);
+		float aspectRatio = 1.0f;
+		//d3d.GetAspectRatio(aspectRatio);
 		float nearPlane = 0.1f;
 		float farPlane = 100.0f;
 
 		matrixProxy.ProjectionDirectXLHF(fov, aspectRatio, nearPlane, farPlane, minimapProjectionMatrix);
+		minimapShaderVars.projectionMatrix = minimapProjectionMatrix;
 	}
 	void InitializeMiniMapConstantBuffer(ID3D11Device* creator, const void* data)
 	{
@@ -285,7 +287,20 @@ public:
 
 		ReleasePipelineHandles(curHandles);
 	}
+	void UpdateMiniMapConstantBuffer()
+	{
+		PipelineHandles curHandles = GetCurrentPipelineHandles();
+		SetUpPipeline(curHandles);
 
+		D3D11_MAPPED_SUBRESOURCE mappedSubresource;
+
+		curHandles.context->Map(minimapConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedSubresource);
+		memcpy(mappedSubresource.pData, &minimapShaderVars, sizeof(MinimapShaderVars));
+		curHandles.context->Unmap(minimapConstantBuffer.Get(), 0);
+
+		ReleasePipelineHandles(curHandles);
+	
+	}
 	//TODO: Part 4B 
 	void UpdateCamera()
 	{
@@ -483,6 +498,8 @@ private:
 		
 		handles.context->VSSetConstantBuffers(2, 1, constantBuffer.GetAddressOf());
 		handles.context->PSSetConstantBuffers(2, 1, constantBuffer.GetAddressOf());
+		handles.context->VSSetConstantBuffers(3, 1, minimapConstantBuffer.GetAddressOf());
+		handles.context->PSSetConstantBuffers(3, 1, minimapConstantBuffer.GetAddressOf());
 		handles.context->IASetInputLayout(vertexFormat.Get());
 		handles.context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST); 
 	}

@@ -48,8 +48,9 @@ int main()
 		if (+d3d11.Create(win, GW::GRAPHICS::DEPTH_BUFFER_SUPPORT))
 		{
 			RenderManager renderer(win, d3d11);
-			Camera camera(win, d3d11);
+			Camera camera(win, d3d11); // main camera
 			Audio audio;
+
 
 			while (+win.ProcessWindowEvents())
 			{
@@ -88,9 +89,36 @@ int main()
 				{
 					con->ClearRenderTargetView(view, clr);
 					con->ClearDepthStencilView(depth, D3D11_CLEAR_DEPTH, 1, 0);
+
+					// Main Viewport
+					D3D11_VIEWPORT viewport1;
+					viewport1.Width = 800;
+					viewport1.Height = 600;
+					viewport1.MinDepth = 0.0f;
+					viewport1.MaxDepth = 1.0f;
+					viewport1.TopLeftX = 0;
+					viewport1.TopLeftY = 0;
+					con->RSSetViewports(1, &viewport1);
+
 					camera.UpdateCamera();
 					camera.UpdateConstantBuffer();
 					renderer.Render();
+
+					con->ClearDepthStencilView(depth, D3D11_CLEAR_DEPTH, 1, 0);
+
+					// MiniMap Viewport
+					D3D11_VIEWPORT viewport2;
+					viewport2.Width = 256;
+					viewport2.Height = 256;
+					viewport2.MinDepth = 0.0f;
+					viewport2.MaxDepth = 1.0f;
+					viewport2.TopLeftX = 0;
+					viewport2.TopLeftY = 0;
+					con->RSSetViewports(1, &viewport2);
+
+					camera.UpdateMiniMapConstantBuffer();
+					renderer.Render();
+
 					swap->Present(1, 0);
 					// release incremented COM reference counts
 					swap->Release();
