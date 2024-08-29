@@ -78,7 +78,7 @@ cmake ./S ./ .B ./build
 - **Right Trigger**: Move Up
 - **Left Trigger**: Move Down
 
-For more detailed controls and customization options, please refer to [README.txt](DirectX11/README.txt).
+For more detailed controls and customization options, please refer to [README.txt](DirectX11-Level-Renderer/DirectX11/README.txt).
 
 ## Credits and Acknowledgements
 
