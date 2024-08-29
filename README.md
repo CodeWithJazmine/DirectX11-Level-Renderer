@@ -1,6 +1,7 @@
 # DirectX11 Level Renderer
 
-A custom 3D level renderer built using DirectX11, capable of important and rendering complex game levels created in Blender. This started as an assignment intended to enhance graphics API skills.
+A custom 3D level renderer built using DirectX11, capable of important and rendering complex game levels created in Blender. This started as an assignment intended to enhance graphics API skills and is actively under development to expand on its features.
+
 ## Table of Contents
 
 - [DirectX11 Level Renderer](#directx11-level-renderer)
