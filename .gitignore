@@ -40,3 +40,6 @@
 *Scripts/*.log
 /Assignment 1/DirectX11/Assignment 1 DirectX 11.docx
 /Assignment 2/DirectX11/Assignment 2 DirectX 11.docx
+
+# ignore unneccesary documents
+Documents/
